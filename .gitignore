@@ -1,3 +1,11 @@
+# Nifi stuff
+nifi/logs/*.log
+nifi/content_repository
+nifi/database_repository
+nifi/flowfile_repository
+nifi/provenance_repository
+nifi/state
+
 # Logs
 logs
 *.log

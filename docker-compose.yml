@@ -11,25 +11,29 @@ volumes:
 
 services:
 ## --------------------------------------- MONGO-EXPRESS (MONGO UI) ---------------------------------------
-  mongo-express:
+
+  mongo_express:
     image: mongo-express:latest
-    container_name: mongo-express
+    container_name: mongo_express
+    restart: on-failure
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: admin # MongoDB admin username
       ME_CONFIG_MONGODB_ADMINPASSWORD: admin # MongoDB admin password
       ME_CONFIG_BASICAUTH_USERNAME: admin # Actual username
       ME_CONFIG_BASICAUTH_PASSWORD: admin # Actual password
       ME_CONFIG_MONGODB_SERVER: mongo_shard01a
-      ME_CONFIG_MONGODB_PORT: "27122"
+      ME_CONFIG_MONGODB_PORT: "27017"
     ports:
       - "0.0.0.0:8081:8081"
     networks:
       - data-lake
     links:
       - mongo_shard01a
+
 ## ------------------------------------- END MONGO-EXPRESS (MONGO UI) -------------------------------------
 
 ## ------------------------------------------------ MONGO -------------------------------------------------
+
   mongo_shard01a:
     build: mongo/shard/.
     container_name: mongo_shard01a
@@ -40,15 +44,17 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
     ports:
-      - "27122:27017"
+      - "27017:27017"
     networks:
       - data-lake
     volumes:
       - shard01a_data:/data/db
       - shard01a_config:/data/configdb
+
 ## ---------------------------------------------- END MONGO -----------------------------------------------
 
 ## --------------------------------------------- NIFI SECTION ---------------------------------------------
+
   nifi:
     cap_add:
       - NET_ADMIN # low port bindings
@@ -67,18 +73,21 @@ services:
       - data-lake
     links:
       - mongo_shard01a
-#    volumes:
-#      - ./nifi/drivers:/opt/nifi/nifi-current/drivers
-#      - ./nifi/certs:/opt/certs
-#      - ./nifi/conf:/opt/nifi/nifi-current/conf
+    volumes:
+      - ./nifi/database_repository:/opt/nifi/nifi-current/database_repository
+      - ./nifi/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - ./nifi/content_repository:/opt/nifi/nifi-current/content_repository
+      - ./nifi/provenance_repository:/opt/nifi/nifi-current/provenance_repository
+      - ./nifi/state:/opt/nifi/nifi-current/state
+      - ./nifi/logs:/opt/nifi/nifi-current/logs
     restart: unless-stopped
-#    links:
-#      - dis_producer01
+
 ## ------------------------------------------- END NIFI SECTION -------------------------------------------
 
 
 
 ## ----------------------------------------------- PRODUCERS ----------------------------------------------
+
   dis_producer01:
     build: dis/.
     container_name: dis_producer01
