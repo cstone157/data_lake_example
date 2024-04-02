@@ -7,4 +7,4 @@ RUN mkdir app
 WORKDIR "/app"
 COPY xml_sender.py xml_sender.py
 
-CMD ["python3", "/app/xxml_sender.py"]
+CMD ["python3", "/app/xml_sender.py"]
