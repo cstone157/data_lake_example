@@ -1,6 +1,6 @@
 # Nifi stuff
 nifi/logs/*.log
-nifi/conf
+#nifi/conf
 nifi/content_repository
 nifi/database_repository
 nifi/flowfile_repository
