@@ -1,45 +1,19 @@
-version: '3.3'
-
 networks:
   data-lake:
     driver: bridge
 
 volumes:
-  shard01a_data: {}
-  shard01a_config: {}
+  mongo_data: {}
+  mongo_config: {}
 
 
 services:
+## ------------------------------------------------ MONGO -------------------------------------------------
 ## --------------------------------------- MONGO-EXPRESS (MONGO UI) ---------------------------------------
 
-  mongo_express:
-    image: mongo-express:latest
-    container_name: mongo_express
-    restart: on-failure
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin # MongoDB admin username
-      ME_CONFIG_MONGODB_ADMINPASSWORD: admin # MongoDB admin password
-      ME_CONFIG_BASICAUTH_USERNAME: admin # Actual username
-      ME_CONFIG_BASICAUTH_PASSWORD: admin # Actual password
-      ME_CONFIG_MONGODB_SERVER: mongo_shard01a
-      ME_CONFIG_MONGODB_PORT: "27017"
-    ports:
-      - "0.0.0.0:8081:8081"
-    networks:
-      - data-lake
-    links:
-      - mongo_shard01a
-
-## ------------------------------------- END MONGO-EXPRESS (MONGO UI) -------------------------------------
-
-## ------------------------------------------------ MONGO -------------------------------------------------
-
-  mongo_shard01a:
-    build: mongo/shard/.
-    container_name: mongo_shard01a
-#    command: mongod --port 27017 --shardsvr --replSet shard01
-#    security:
-#      authorization: disabled
+  mongo:
+    container_name: mongo
+    build: mongo/.
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
@@ -48,18 +22,66 @@ services:
     networks:
       - data-lake
     volumes:
-      - shard01a_data:/data/db
-      - shard01a_config:/data/configdb
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+
+  mongo_express:
+    container_name: mongo_express
+    image: mongo-express:latest
+    restart: on-failure
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin # MongoDB admin username
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin # MongoDB admin password
+      ME_CONFIG_BASICAUTH_USERNAME: admin # Actual username
+      ME_CONFIG_BASICAUTH_PASSWORD: admin # Actual password
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: "27017"
+    ports:
+      - "0.0.0.0:8081:8081"
+    networks:
+      - data-lake
+    links:
+      - mongo
 
 ## ---------------------------------------------- END MONGO -----------------------------------------------
+
+## ----------------------------------------------- POSTGRES -----------------------------------------------
+## ---------------------------------------- PGADMIN (POSTGRES UI) -----------------------------------------
+
+  postgres:
+    container_name: postgres
+    build: ./postgres/.
+    restart: always
+    environment:
+      POSTGRES_USER: shoc
+      POSTGRES_PASSWORD: shoc
+      POSTGRES_DB: test_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: shoc@shoc.us
+      PGADMIN_DEFAULT_PASSWORD: shoc
+    links:
+      - postgres
+    ports:
+      - "3031:80"
+      
+## --------------------------------------------- END POSTGRES ------------------------------------------
 
 ## --------------------------------------------- NIFI SECTION ---------------------------------------------
 
   nifi:
+    container_name: nifi
     cap_add:
       - NET_ADMIN # low port bindings
     image: apache/nifi:1.25.0
-    container_name: nifi
     ports:
       - "8080:8080/tcp" # HTTP interface
       - "8443:8443/tcp" # HTTPS interface
@@ -72,52 +94,47 @@ services:
     networks:
       - data-lake
     links:
-      - mongo_shard01a
+      - mongo
+      - postgres
     volumes:
-      - ./nifi/conf:/opt/nifi/nifi-current/conf
       - ./nifi/content_repository:/opt/nifi/nifi-current/content_repository
       - ./nifi/database_repository:/opt/nifi/nifi-current/database_repository
       - ./nifi/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
       - ./nifi/logs:/opt/nifi/nifi-current/logs
       - ./nifi/provenance_repository:/opt/nifi/nifi-current/provenance_repository
       - ./nifi/state:/opt/nifi/nifi-current/state
+      # uncomment the next line after copying the /conf directory from the container to your local directory to persist NiFi flows
+      #- ./nifi/conf:/opt/nifi/nifi-current/conf      
     restart: unless-stopped
 
 ## ------------------------------------------- END NIFI SECTION -------------------------------------------
+
+## ------------------------------------------- SUPERSET SECTION -------------------------------------------
+  superset:
+    container_name: superset
+    build: 
+      context: ./superset
+      dockerfile: Dockerfile
+    environment:
+      - ADMIN_USERNAME=admin
+      - ADMIN_EMAIL=admin@superset.com
+      - ADMIN_PASSWORD=admin
+    ports:
+      - 8088:8088
+    links:
+      - mongo
+      - postgres
+#    volumes:
+#      - ./superset/config:/opt/superset
+## ----------------------------------------- END SUPERSET SECTION -----------------------------------------
 
 
 
 ## ----------------------------------------------- PRODUCERS ----------------------------------------------
 
-  dis_producer01:
-    build: dis/.
-    container_name: dis_producer01
-    environment:
-      SERVER: "nifi"
-      SERVER_PORT: 3001
-      SERVER_DELAY: 30
-      SERVER_OPTION: 0
-    networks:
-      - data-lake
-    restart: unless-stopped
-    links:
-      - nifi
-  dis_producer02:
-    build: dis/.
-    container_name: dis_producer02
-    environment:
-      SERVER: "nifi"
-      SERVER_PORT: 3002
-      SERVER_DELAY: 10
-      SERVER_OPTION: 1
-    networks:
-      - data-lake
-    restart: unless-stopped
-    links:
-      - nifi
   xml_producer01:
-    build: xml/.
     container_name: xml_producer01
+    build: xml/.
     environment:
       SERVER: "nifi"
       SERVER_PORT: 3003
