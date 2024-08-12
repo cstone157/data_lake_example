@@ -7,12 +7,10 @@ services:
     restart: always
     ports:
       - "5432:5432"
+    env_file: 
+      - "postgres/.env"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: password
 
   pgadmin:
     image: dpage/pgadmin4
@@ -20,9 +18,8 @@ services:
     restart: always
     ports:
       - "9090:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: user-name@domain-name.com
-      PGADMIN_DEFAULT_PASSWORD: strong-password
+    env_file: 
+      - "pgadmin/.env"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
@@ -30,7 +27,7 @@ services:
     image: quay.io/keycloak/keycloak:24.0.2
     container_name: keycloak_web
     env_file: 
-      - "keycloak/keycloak.env"
+      - "keycloak/.env"
     command: start-dev
     depends_on:
       - postgres
