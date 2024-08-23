@@ -1,9 +1,14 @@
 version: '3.8'
 
+networks:
+  data-lake:
+    driver: bridge
+
 services:
+### --------------------------------------- POSTGRES & PGADMIN ---------------------------------------
   postgres:
     image: postgres:15.6
-    container_name: postgres_db
+    container_name: postgres_container
     restart: always
     ports:
       - "5432:5432"
@@ -11,6 +16,8 @@ services:
       - "postgres/.env"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - data-lake
 
   pgadmin:
     image: dpage/pgadmin4
@@ -22,12 +29,15 @@ services:
       - "pgadmin/.env"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - data-lake
+### ------------------------------------- END POSTGRES & PGADMIN -------------------------------------
 
+### -------------------------------------------- KEYCLOAK --------------------------------------------
   keycloak_web:
-    #image: quay.io/keycloak/keycloak:24.0.2
     build: ./keycloak
     image: cstone157/keycloak
-    container_name: keycloak_web
+    container_name: keycloak_container
     env_file: 
       - "keycloak/.env"
     command: start-dev
@@ -35,6 +45,9 @@ services:
       - postgres
     ports:
       - 8080:8080
+    networks:
+      - data-lake
+### ------------------------------------------ END KEYCLOAK ------------------------------------------
 
 volumes:
   postgres_data:
@@ -42,18 +55,6 @@ volumes:
 
 
 
-#version: '3.3'
-#
-#networks:
-#  data-lake:
-#    driver: bridge
-#
-#volumes:
-#  shard01a_data: {}
-#  shard01a_config: {}
-#
-#
-#services:
 ### --------------------------------------- MONGO-EXPRESS (MONGO UI) ---------------------------------------
 #
 #  mongo_express:
