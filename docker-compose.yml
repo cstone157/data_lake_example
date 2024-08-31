@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   data-lake:
     driver: bridge
@@ -34,19 +32,19 @@ services:
 ### ------------------------------------- END POSTGRES & PGADMIN -------------------------------------
 
 ### -------------------------------------------- KEYCLOAK --------------------------------------------
-  keycloak_web:
-    build: ./keycloak
-    image: cstone157/keycloak
-    container_name: keycloak_container
-    env_file: 
-      - "keycloak/.env"
-    command: start-dev
-    depends_on:
-      - postgres
-    ports:
-      - 8080:8080
-    networks:
-      - data-lake
+#  keycloak_web:
+#    build: ./keycloak
+#    image: cstone157/keycloak
+#    container_name: keycloak_container
+#    env_file: 
+#      - "keycloak/.env"
+#    command: start-dev
+#    depends_on:
+#      - postgres
+#    ports:
+#      - 8080:8080
+#    networks:
+#      - data-lake
 ### ------------------------------------------ END KEYCLOAK ------------------------------------------
 
 volumes:
