@@ -7,6 +7,9 @@ nifi/flowfile_repository
 nifi/provenance_repository
 nifi/state
 
+# Data folder of postgres
+postgres/data
+
 # Logs
 logs
 *.log
