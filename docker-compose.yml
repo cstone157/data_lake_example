@@ -5,8 +5,9 @@ networks:
 services:
 ### --------------------------------------- POSTGRES & PGADMIN ---------------------------------------
   postgres:
-    image: postgres:15.6
-    container_name: postgres_container
+    container_name: postgres
+    build: ./postgres/.
+    image: cstone157/postgres
     restart: always
     ports:
       - "5432:5432"
@@ -18,8 +19,9 @@ services:
       - data-lake
 
   pgadmin:
-    image: dpage/pgadmin4
     container_name: pgadmin4_container
+    build: ./pgadmin/.
+    image: cstone157/pgadmin
     restart: always
     ports:
       - "9090:80"
@@ -29,6 +31,10 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     networks:
       - data-lake
+    links:
+      - postgres
+    depends_on:
+      - postgres
 ### ------------------------------------- END POSTGRES & PGADMIN -------------------------------------
 
 ### -------------------------------------------- KEYCLOAK --------------------------------------------
@@ -48,7 +54,6 @@ services:
 ### ------------------------------------------ END KEYCLOAK ------------------------------------------
 
 volumes:
-  postgres_data:
   pgadmin-data:
 
 
