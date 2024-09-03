@@ -14,7 +14,8 @@ services:
     env_file: 
       - "postgres/.env"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+#      - postgres-data:/var/lib/postgresql/data
+      - ./data:/var/lib/postgresql/data
     networks:
       - data-lake
 
@@ -38,25 +39,20 @@ services:
 ### ------------------------------------- END POSTGRES & PGADMIN -------------------------------------
 
 ### -------------------------------------------- KEYCLOAK --------------------------------------------
-#  keycloak_web:
-#    build: ./keycloak
-#    image: cstone157/keycloak
-#    container_name: keycloak_container
-#    env_file: 
-#      - "keycloak/.env"
-#    command: start-dev
-#    depends_on:
-#      - postgres
-#    ports:
-#      - 8080:8080
-#    networks:
-#      - data-lake
+  keycloak_web:
+    build: ./keycloak
+    image: cstone157/keycloak
+    container_name: keycloak_container
+    env_file: 
+      - "keycloak/.env"
+    command: start-dev
+    depends_on:
+      - postgres
+    ports:
+      - 8080:8080
+    networks:
+      - data-lake
 ### ------------------------------------------ END KEYCLOAK ------------------------------------------
-
-volumes:
-  pgadmin-data:
-
-
 
 ### --------------------------------------- MONGO-EXPRESS (MONGO UI) ---------------------------------------
 #
@@ -177,3 +173,8 @@ volumes:
 #    links:
 #      - nifi
 #    
+
+
+volumes:
+  pgadmin-data:
+  postgres-data:
