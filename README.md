@@ -6,7 +6,7 @@ A simplified example of the data-lake using Kubernetes
 # Setup of Kubernetes
 
 # PgAdmin
-### Connecting pgAdmin to postgres using the IP ($ kubectl get all -o wide) for the postgres pod
+### Connecting pgAdmin to postgres using the IP ($ kubectl get all -o wide) for the postgres pod or using the name given in the services (postgres)
 
 # NOTES:
 ###    - To encode something using base64:

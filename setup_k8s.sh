@@ -42,8 +42,6 @@ function add_k8_pod {
 }
 
 
-
-
 clear
 echo "Start Setting up our Kubernetes enviroment"
 
@@ -55,15 +53,11 @@ then
 fi
 
 
-
 ## ================ POSTGRES BLOCK ================
-
 add_k8_pod "postgres" "postgres/postgres.yaml" "root" "password"
-
 
 ## ================= PGADMIN BLOCK ================
 add_k8_pod "pgadmin" "pgadmin/pgadmin.yaml" -1 "password"
-
 
 ## ================== MONGO BLOCK =================
 #add_k8_pod "mongo", "mongo/mongo-deploy.yaml" # Require the user to input the username/password
@@ -72,8 +66,9 @@ add_k8_pod "mongo" "mongo/mongo.yaml" "root" "password"
 ## ============== MONGO-EXPRESS BLOCK =============
 add_k8_pod "mongo-express" "mongo-express/mongo-express.yaml" "root" "password"
 
+## =============== JUPYTERHUB BLOCK ===============
+add_k8_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
 
 # Show all of our relavent pods / services
 printf "\n=============================================================================\nResults\n"
 kubectl get all -o wide
-
