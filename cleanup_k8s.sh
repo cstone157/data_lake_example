@@ -9,4 +9,6 @@ kubectl delete --all deployment
 sleep .5
 kubectl delete --all replicaset
 sleep 3
+kubectl delete --all secret
+sleep 3
 kubectl get all -o wide

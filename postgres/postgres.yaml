@@ -8,8 +8,8 @@ type: Opaque
 data:
 #    postgres-root-username: cm9vdA==
 #    postgres-root-password: bXlwYXNzd29yZA==
-    postgres-root-username: ${POSTGRES_USERNAME}
-    postgres-root-password: ${POSTGRES_PASSWORD}
+    postgres-root-username: ${_username}
+    postgres-root-password: ${_password}
 ---
 apiVersion: v1
 kind: ConfigMap

@@ -6,27 +6,27 @@ metadata:
     app: mongo
 type: Opaque
 data:
-    mongo-root-username: ${POSTGRES_USERNAME}
-    pmongo-root-password: ${POSTGRES_PASSWORD}
+    mongo-root-username: ${_username}
+    mongo-root-password: ${_password}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongodb-deployment
+  name: mongo
   labels:
-    app: mongodb
+    app: mongo
 spec:
   selector:
    matchLabels:
-    app: mongodb
+    app: mongo
   replicas: 1
   template:
     metadata:
       labels:
-        app: mongodb
+        app: mongo
     spec:
       containers:
-        - name: mongodb
+        - name: mongo
           image: mongo
           ports:
           - containerPort: 27017
@@ -35,21 +35,21 @@ spec:
            - name: MONGO_INITDB_ROOT_USERNAME
              valueFrom:
                secretKeyRef:
-                 name: mongodb-secret
+                 name: mongo-secret
                  key: mongo-root-username
            - name: MONGO_INITDB_ROOT_PASSWORD
              valueFrom:
                secretKeyRef:
-                 name: mongodb-secret
-                 key: mongodb-root-password
+                 name: mongo-secret
+                 key: mongo-root-password
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb-service
+  name: mongo
 spec:
   selector:
-    app: mongodb
+    app: mongo
   ports:
     - protocol: TCP
       port: 27017

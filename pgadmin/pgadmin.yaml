@@ -4,7 +4,7 @@ metadata:
   name: pgadmin-secret
 type: Opaque
 data:
-  pgadmin-default-password: ${PGADMIN_PASSWORD}
+  pgadmin-default-password: ${_password}
 ---
 apiVersion: apps/v1
 kind: Deployment
