@@ -46,10 +46,28 @@ function add_k8s_pod {
 
 ## Helper function for creating a k8s pod
 function add_jupyter_k8s_pod {
-    default=$(pwd)
-    default="$default/jupyter/work"
-    read -p "If you want to use a local volume (storage) for the JupyterHub's work directory. \nDefault will be $default, NA to not use a local volume: " _volume
+    _local_volume_path=$(pwd)
+    _local_volume_path="$_local_volume_path/jupyter/work"
+    read -p "If you want to use a local volume (storage) for the JupyterHub's work directory. \nDefault will be $_local_volume_path, NA to not use a local volume: " _user_specified_path
+
+    name="Jupyter"
+    path="jupyter/jupyter.yaml"
+
+    if [$_user_specified_path != "NA"]:
+    then
+        if [$_user_specified_path != ""]:
+        then
+            _local_volume_path=$_user_specified_path
+        fi
+
+        path="jupyter/jupyter-w-local.yaml"
+        eval 'export _local_volume_path="$_local_volume_path"'
+    fi
+
+    printf "\n=============================================================================\nExecuting the $path, to create the service $name\n"
+    envsubst < $path | kubectl apply -f -
 }
+
 
 
 ## ================= SETUP BLOCK ==================
@@ -84,8 +102,8 @@ add_k8s_pod "mongo-express" "mongo-express/mongo-express.yaml" "root" "password"
 ## =============== JUPYTERHUB BLOCK ===============
 printf "=============================================================================\nSetup JupyterHub Pod\n"
 add_jupyter_k8s_pod
-#add_k8s_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
 
+#add_k8s_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
 ## Get all the nodes
 #kubectl get node
 ## label the node with local-storage
