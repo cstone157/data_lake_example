@@ -11,4 +11,8 @@ kubectl delete --all replicaset
 sleep 3
 kubectl delete --all secret
 sleep 3
+kubectl delete --all persistentvolumeclaim
+sleep 3
+kubectl delete --all persistentvolume
+sleep 3
 kubectl get all -o wide
