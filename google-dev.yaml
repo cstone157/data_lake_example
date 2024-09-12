@@ -15,10 +15,12 @@ metadata:
     app: postgres
 type: Opaque
 data:
-    postgres_root_username: ${postgres_root_username}
-    postgres_root_password: ${postgres_root_password}
-    pgadmin_root_username: ${pgadmin_root_username}
-    pgadmin_root_password: ${pgadmin_root_password}
+    postgres_root_username: ${postgres_root_username_b64}
+    postgres_root_password: ${postgres_root_password_b64}
+    pgadmin_root_username: ${pgadmin_root_username_b64}
+    pgadmin_root_password: ${pgadmin_root_password_b64}
+    keycloak_admin_username: ${keycloak_admin_username_b64}
+    keycloak_admin_password: ${keycloak_admin_password_b64}
 
 ---
 apiVersion: v1
@@ -35,7 +37,7 @@ data:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: stone-data-lake-postgres
+  name: postgres-pv
   namespace: stone-data-lake
 spec:
   capacity:
@@ -61,7 +63,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: stone-data-lake-pg-claim
+  name: postgres-pvc
   namespace: stone-data-lake
 spec:
   storageClassName: local-storage
@@ -115,7 +117,7 @@ spec:
       volumes:
       - name: postgres-data
         persistentVolumeClaim:
-          claimName: stone-data-lake-pg-claim
+          claimName: postgres-pvc
 
 ---
 
@@ -161,6 +163,80 @@ spec:
 
 ---
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: keycloak-pv
+  namespace: stone-data-lake
+  labels:
+    app: keycloak
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/data"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: keycloak-pvc
+  namespace: stone-data-lake
+  labels:
+    app: keycloak
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: stone-data-lake
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:18.0.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: KEYCLOAK_USER
+          valueFrom:
+            secretKeyRef:
+              name: stone-data-lake-secret
+              key: keycloak_admin_username
+        - name: KEYCLOAK_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: stone-data-lake-secret
+              key: keycloak_admin_password
+        volumeMounts:
+        - name: keycloak-data
+          mountPath: /opt/keycloak/data
+        command: ["/opt/jboss/keycloak/bin/standalone.sh", "-b", "0.0.0.0", "-c", "/opt/jboss/keycloak/standalone/standalone.xml"]
+      volumes:
+      - name: keycloak-data
+        persistentVolumeClaim:
+          claimName: keycloak-pvc
+
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: pgadmin
@@ -175,3 +251,20 @@ spec:
   - protocol: TCP
     nodePort: 30200
     port: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: stone-data-lake
+  labels:
+    app: keycloak
+spec:
+  type: NodePort
+  ports:
+    - protocol: TCP
+      nodePort: 30100
+      port: 8080
+  selector:
+    app: keycloak

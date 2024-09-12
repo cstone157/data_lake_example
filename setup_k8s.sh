@@ -82,26 +82,26 @@ then
 fi
 
 ## ================ POSTGRES BLOCK ================
-printf "=============================================================================\nSetup Postgres Pod\n"
-add_k8s_pod "postgres" "postgres/postgres.yaml" "root" "password"
+#printf "=============================================================================\nSetup Postgres Pod\n"
+#add_k8s_pod "postgres" "postgres/postgres.yaml" "root" "password"
 
 ## ================= PGADMIN BLOCK ================
-printf "\n=============================================================================\nSetup PgAdmin Pod\n"
-add_k8s_pod "pgadmin" "pgadmin/pgadmin.yaml" -1 "password"
+#printf "\n=============================================================================\nSetup PgAdmin Pod\n"
+#add_k8s_pod "pgadmin" "pgadmin/pgadmin.yaml" -1 "password"
 
 ## ================== MONGO BLOCK =================
-printf "=============================================================================\nSetup Mongo Pod\n"
+#printf "=============================================================================\nSetup Mongo Pod\n"
 #add_k8_pod "mongo", "mongo/mongo-deploy.yaml" # Require the user to input the username/password
-add_k8s_pod "mongo" "mongo/mongo.yaml" "root" "password"
+#add_k8s_pod "mongo" "mongo/mongo.yaml" "root" "password"
 
 ## ============== MONGO-EXPRESS BLOCK =============
-printf "=============================================================================\nSetup Mongo-Express Pod\n"
-add_k8s_pod "mongo-express" "mongo-express/mongo-express.yaml" "root" "password"
+#printf "=============================================================================\nSetup Mongo-Express Pod\n"
+#add_k8s_pod "mongo-express" "mongo-express/mongo-express.yaml" "root" "password"
 
 
 ## =============== JUPYTERHUB BLOCK ===============
-printf "=============================================================================\nSetup JupyterHub Pod\n"
-add_jupyter_k8s_pod
+#printf "=============================================================================\nSetup JupyterHub Pod\n"
+#add_jupyter_k8s_pod
 
 #add_k8s_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
 ## Get all the nodes
@@ -114,5 +114,13 @@ add_jupyter_k8s_pod
 
 ## =============== REPORT/END BLOCK ===============
 # Show all of our relavent pods / services
-printf "\n=============================================================================\nResults\n"
-kubectl get all -o wide
+#printf "\n=============================================================================\nResults\n"
+#kubectl get all -o wide
+
+
+eval 'export postgres_root_username_b64="admin"'
+eval 'export postgres_root_password_b64="admin"'
+eval 'export pgadmin_root_username_b64="admin@admin.com"'
+eval 'export pgadmin_root_password_b64="admin"'
+eval 'export keycloak_admin_username_b64="admin"'
+eval 'export keycloak_admin_password_b64="admin"'
