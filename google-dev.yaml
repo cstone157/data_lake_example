@@ -1,74 +1,75 @@
+# Don't just call kubectl apply -f [file_name] on this file.  You need to set the enviroment variables, 
+#     in base64 encoding and then call "$ envsubst < [file_name] | kubectl apply -f -"
 apiVersion: v1
 kind: Namespace
 metadata:
   name: stone-data-lake
 
 ---
-
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Secret
 metadata:
-  name: keycloak
+  name: stone-data-lake-secret
+  namespace: stone-data-lake
+  labels:
+    app: postgres
+type: Opaque
+data:
+    postgres_root_username: ${postgres_root_username}
+    postgres_root_password: ${postgres_root_password}
+    pgadmin_root_username: ${pgadmin_root_username}
+    pgadmin_root_password: ${pgadmin_root_password}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stone-data-lake-configmap
+  namespace: stone-data-lake
+  labels:
+    app: postgres
+data:
+  postgres-dbname: pg-data-lake
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: stone-data-lake-postgres
   namespace: stone-data-lake
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: keycloak
-  template:
-    metadata:
-      labels:
-        app: keycloak
-    spec:
-      containers:
-      - name: keycloak
-        image: quay.io/keycloak/keycloak:18.0.1
-        ports:
-        - containerPort: 8080
-        env:
-        - name: KEYCLOAK_ADMIN
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-admin
-              key: username
-        - name: KEYCLOAK_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-admin
-              key: password
-        - name: KEYCLOAK_DB_URL
-          value: jdbc:postgresql://postgres:5432/keycloak
-        - name: KEYCLOAK_DB_USER
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-db-user
-              key: username
-        - name: KEYCLOAK_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-db-user
-              key: password
-#        volumeMounts:
-#        - name: keycloak-config
-#          mountPath: /opt/jboss/keycloak/standalone/configuration
-#      volumes:
-#      - name: keycloak-config
-#        persistentVolumeClaim:
-#          claimName: keycloak-config
-#
-#---
-#
-#apiVersion: v1
-#kind: PersistentVolumeClaim
-#metadata:
-#  name: keycloak-config
-#  namespace: stone-data-lake
-#spec:
-#  accessModes:
-#    - ReadWriteOnce
-#  resources:
-#    requests:
-#      storage: 1Gi
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - docker-desktop
+  volumeMode: Filesystem 
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stone-data-lake-pg-claim
+  namespace: stone-data-lake
+spec:
+  storageClassName: local-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
 
 ---
 
@@ -90,128 +91,31 @@ spec:
       containers:
       - name: postgres
         image: postgres:14.5
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: stone-data-lake-secret
+                key: postgres_root_username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: stone-data-lake-secret
+                key: postgres_root_password
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: stone-data-lake-configmap
+                key: postgres-dbname
         ports:
         - containerPort: 5432
-        env:
-        - name: POSTGRES_USER
-          value: postgres
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgres-password
-              key: password
-        - name: POSTGRES_DB
-          value: keycloak
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
       volumes:
       - name: postgres-data
-        emptyDir: {}
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mongodb
-  namespace: stone-data-lake
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongodb
-  template:
-    metadata:
-      labels:
-        app: mongodb
-    spec:
-      containers:
-      - name: mongodb
-        image: mongo:5.0
-        ports:
-        - containerPort: 27017
-        volumeMounts:
-        - name: mongodb-data
-          mountPath: /data/db
-      volumes:
-      - name: mongodb-data
         persistentVolumeClaim:
-          claimName: mongodb-data
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mongodb-data
-  namespace: stone-data-lake
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nifi
-  namespace: stone-data-lake
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: nifi
-  template:
-    metadata:
-      labels:
-        app: nifi
-    spec:
-      containers:
-      - name: nifi
-        image: apache/nifi:2.0.0
-        ports:
-        - containerPort: 8080
-        env:
-        - name: NIFI_WEB_PORT
-          value: "8080"
-        - name: NIFI_AUTH_TYPE
-          value: "KEYCLOAK"
-        - name: NIFI_KEYCLOAK_SERVER_URL
-          value: "http://keycloak:8080/auth"
-        - name: NIFI_KEYCLOAK_REALM
-          value: "master"
-        - name: NIFI_KEYCLOAK_CLIENT_ID
-          value: "nifi"
-        - name: NIFI_KEYCLOAK_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: nifi-keycloak
-              key: secret
-        volumeMounts:
-        - name: nifi-data
-          mountPath: /nifi
-      volumes:
-      - name: nifi-data
-        persistentVolumeClaim:
-          claimName: nifi-data
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nifi-data
-  namespace: stone-data-lake
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+          claimName: stone-data-lake-pg-claim
 
 ---
 
@@ -232,453 +136,42 @@ spec:
     spec:
       containers:
       - name: pgadmin
-        image: dpage/pgadmin4:6.6
+        image: dpage/pgadmin4
         ports:
-        - containerPort: 5050
+        - containerPort: 80
         env:
         - name: PGADMIN_DEFAULT_EMAIL
-          value: "admin@pgadmin.org"
+          valueFrom:
+            secretKeyRef:
+              name: stone-data-lake-secret
+              key: pgadmin_root_username
         - name: PGADMIN_DEFAULT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: pgadmin-password
-              key: password
-        - name: PGADMIN_SERVER_MODE
-          value: "true"
+              name: stone-data-lake-secret
+              key: pgadmin_root_password
         - name: PGADMIN_CONFIG_SERVER_MODE
-          value: "true"
-        - name: PGADMIN_SERVER_PORT
-          value: "5432"
-        - name: PGADMIN_SERVER_HOST
-          value: "postgres"
-        - name: PGADMIN_CONFIG_SERVER_HOST
-          value: "postgres"
-        - name: PGADMIN_AUTH_METHOD
-          value: "keycloak"
-        - name: PGADMIN_KEYCLOAK_SERVER_URL
-          value: "http://keycloak:8080/auth"
-        - name: PGADMIN_KEYCLOAK_REALM
-          value: "master"
-        - name: PGADMIN_KEYCLOAK_CLIENT_ID
-          value: "pgadmin"
-        - name: PGADMIN_KEYCLOAK_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: pgadmin-keycloak
-              key: secret
+          value: "True"
         volumeMounts:
         - name: pgadmin-data
-          mountPath: /var/lib/pgadmin4
+          mountPath: /var/lib/pgadmin
       volumes:
       - name: pgadmin-data
-        persistentVolumeClaim:
-          claimName: pgadmin-data
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pgadmin-data
-  namespace: stone-data-lake
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mongo-express
-  namespace: stone-data-lake
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongo-express
-  template:
-    metadata:
-      labels:
-        app: mongo-express
-    spec:
-      containers:
-      - name: mongo-express
-        image: mongo-express:0.58.2
-        ports:
-        - containerPort: 8081
-        env:
-        - name: MONGO_EXPRESS_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mongo-express-password
-              key: password
-        - name: MONGO_EXPRESS_AUTH_TYPE
-          value: "KEYCLOAK"
-        - name: MONGO_EXPRESS_KEYCLOAK_SERVER_URL
-          value: "http://keycloak:8080/auth"
-        - name: MONGO_EXPRESS_KEYCLOAK_REALM
-          value: "master"
-        - name: MONGO_EXPRESS_KEYCLOAK_CLIENT_ID
-          value: "mongo-express"
-        - name: MONGO_EXPRESS_KEYCLOAK_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: mongo-express-keycloak
-              key: secret
-      volumes:
-      - name: mongo-express-data
-        persistentVolumeClaim:
-          claimName: mongo-express-data
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mongo-express-data
-  namespace: stone-data-lake
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: jupyterlab
-  namespace: stone-data-lake
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: jupyterlab
-  template:
-    metadata:
-      labels:
-        app: jupyterlab
-    spec:
-      containers:
-      - name: jupyterlab
-        image: jupyter/base-notebook:latest
-        ports:
-        - containerPort: 8888
-        env:
-        - name: JUPYTER_AUTH_TYPE
-          value: "KEYCLOAK"
-        - name: JUPYTER_KEYCLOAK_SERVER_URL
-          value: "http://keycloak:8080/auth"
-        - name: JUPYTER_KEYCLOAK_REALM
-          value: "master"
-        - name: JUPYTER_KEYCLOAK_CLIENT_ID
-          value: "jupyterlab"
-        - name: JUPYTER_KEYCLOAK_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: jupyterlab-keycloak
-              key: secret
-        volumeMounts:
-        - name: jupyterlab-data
-          mountPath: /home/jovyan/work
-      volumes:
-      - name: jupyterlab-data
         emptyDir: {}
 
 ---
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kubernetes-dashboard
-  namespace: stone-data-lake
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: kubernetes-dashboard
-  template:
-    metadata:
-      labels:
-        app: kubernetes-dashboard
-    spec:
-      containers:
-      - name: kubernetes-dashboard
-        image: kubernetesui/dashboard:v2.8.0
-        ports:
-        - containerPort: 8443
-        env:
-        - name: DASHBOARD_API_URL
-          value: "http://localhost:8001"
-        - name: DASHBOARD_AUTH_TYPE
-          value: "KEYCLOAK"
-        - name: DASHBOARD_KEYCLOAK_SERVER_URL
-          value: "http://keycloak:8080/auth"
-        - name: DASHBOARD_KEYCLOAK_REALM
-          value: "master"
-        - name: DASHBOARD_KEYCLOAK_CLIENT_ID
-          value: "kubernetes-dashboard"
-        - name: DASHBOARD_KEYCLOAK_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: kubernetes-dashboard-keycloak
-              key: secret
-        volumeMounts:
-        - name: dashboard-data
-          mountPath: /tmp/dashboard
-      volumes:
-      - name: dashboard-data
-        persistentVolumeClaim:
-          claimName: dashboard-data
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: dashboard-data
-  namespace: stone-data-lake
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: keycloak
-  namespace: stone-data-lake
-spec:
-  type: LoadBalancer
-  selector:
-    app: keycloak
-  ports:
-  - port: 8080
-    targetPort: 8080
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres
-  namespace: stone-data-lake
-spec:
-  type: ClusterIP
-  selector:
-    app: postgres
-  ports:
-  - port: 5432
-    targetPort: 5432
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongodb
-  namespace: stone-data-lake
-spec:
-  type: ClusterIP
-  selector:
-    app: mongodb
-  ports:
-  - port: 27017
-    targetPort: 27017
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: nifi
-  namespace: stone-data-lake
-spec:
-  type: LoadBalancer
-  selector:
-    app: nifi
-  ports:
-  - port: 8080
-    targetPort: 8080
-
----
-
 apiVersion: v1
 kind: Service
 metadata:
   name: pgadmin
   namespace: stone-data-lake
-spec:
-  type: LoadBalancer
-  selector:
+  labels:
     app: pgadmin
-  ports:
-  - port: 5050
-    targetPort: 5050
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongo-express
-  namespace: stone-data-lake
 spec:
-  type: LoadBalancer
   selector:
-    app: mongo-express
+   app: pgadmin
+  type: NodePort
   ports:
-  - port: 8081
-    targetPort: 8081
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: jupyterlab
-  namespace: stone-data-lake
-spec:
-  type: LoadBalancer
-  selector:
-    app: jupyterlab
-  ports:
-  - port: 8888
-    targetPort: 8888
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: kubernetes-dashboard
-  namespace: stone-data-lake
-spec:
-  type: LoadBalancer
-  selector:
-    app: kubernetes-dashboard
-  ports:
-  - port: 8443
-    targetPort: 8443
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: keycloak-admin
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  username: admin
-  password: admin
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: keycloak-db-user
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  username: keycloak
-  password: keycloak
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: postgres-password
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  password: postgres
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: nifi-keycloak
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  secret: "your-nifi-client-secret"
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: pgadmin-password
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  password: admin
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: pgadmin-keycloak
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  secret: "your-pgadmin-client-secret"
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mongo-express-password
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  password: admin
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mongo-express-keycloak
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  secret: "your-mongo-express-client-secret"
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: jupyterlab-keycloak
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  secret: "your-jupyterlab-client-secret"
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: kubernetes-dashboard-keycloak
-  namespace: stone-data-lake
-type: Opaque
-stringData:
-  secret: "your-kubernetes-dashboard-client-secret"
+  - protocol: TCP
+    nodePort: 30200
+    port: 80

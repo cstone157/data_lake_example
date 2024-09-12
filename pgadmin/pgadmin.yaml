@@ -21,7 +21,6 @@ spec:
         app: pgadmin
     spec:
       containers:
-
         - name: pgadmin4
           image: dpage/pgadmin4
           env:
