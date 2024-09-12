@@ -1,1 +1,0 @@
-FROM dpage/pgadmin4:8.11.0
