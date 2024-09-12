@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: keycloak-demo
+  name: stone-data-lake
 
 ---
 
@@ -9,7 +9,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: keycloak
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   replicas: 1
   selector:
@@ -48,27 +48,27 @@ spec:
             secretKeyRef:
               name: keycloak-db-user
               key: password
-        volumeMounts:
-        - name: keycloak-config
-          mountPath: /opt/jboss/keycloak/standalone/configuration
-      volumes:
-      - name: keycloak-config
-        persistentVolumeClaim:
-          claimName: keycloak-config
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: keycloak-config
-  namespace: keycloak-demo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
+#        volumeMounts:
+#        - name: keycloak-config
+#          mountPath: /opt/jboss/keycloak/standalone/configuration
+#      volumes:
+#      - name: keycloak-config
+#        persistentVolumeClaim:
+#          claimName: keycloak-config
+#
+#---
+#
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: keycloak-config
+#  namespace: stone-data-lake
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 1Gi
 
 ---
 
@@ -76,7 +76,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   replicas: 1
   selector:
@@ -107,22 +107,7 @@ spec:
           mountPath: /var/lib/postgresql/data
       volumes:
       - name: postgres-data
-        persistentVolumeClaim:
-          claimName: postgres-data
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-data
-  namespace: keycloak-demo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+        emptyDir: {}
 
 ---
 
@@ -130,7 +115,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mongodb
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   replicas: 1
   selector:
@@ -160,7 +145,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mongodb-data
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   accessModes:
     - ReadWriteOnce
@@ -174,7 +159,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nifi
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   replicas: 1
   selector:
@@ -220,7 +205,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: nifi-data
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   accessModes:
     - ReadWriteOnce
@@ -234,7 +219,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pgadmin
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   replicas: 1
   selector:
@@ -295,7 +280,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: pgadmin-data
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   accessModes:
     - ReadWriteOnce
@@ -309,7 +294,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mongo-express
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   replicas: 1
   selector:
@@ -355,7 +340,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mongo-express-data
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   accessModes:
     - ReadWriteOnce
@@ -369,7 +354,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jupyterlab
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   replicas: 1
   selector:
@@ -404,22 +389,7 @@ spec:
           mountPath: /home/jovyan/work
       volumes:
       - name: jupyterlab-data
-        persistentVolumeClaim:
-          claimName: jupyterlab-data
-
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: jupyterlab-data
-  namespace: keycloak-demo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+        emptyDir: {}
 
 ---
 
@@ -427,7 +397,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kubernetes-dashboard
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   replicas: 1
   selector:
@@ -473,7 +443,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: dashboard-data
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   accessModes:
     - ReadWriteOnce
@@ -487,7 +457,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: keycloak
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   type: LoadBalancer
   selector:
@@ -502,7 +472,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   type: ClusterIP
   selector:
@@ -517,7 +487,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongodb
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   type: ClusterIP
   selector:
@@ -532,7 +502,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nifi
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   type: LoadBalancer
   selector:
@@ -547,7 +517,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: pgadmin
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   type: LoadBalancer
   selector:
@@ -562,7 +532,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongo-express
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   type: LoadBalancer
   selector:
@@ -577,7 +547,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jupyterlab
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   type: LoadBalancer
   selector:
@@ -592,7 +562,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kubernetes-dashboard
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 spec:
   type: LoadBalancer
   selector:
@@ -607,7 +577,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: keycloak-admin
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   username: admin
@@ -619,7 +589,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: keycloak-db-user
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   username: keycloak
@@ -631,7 +601,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: postgres-password
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   password: postgres
@@ -642,7 +612,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: nifi-keycloak
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   secret: "your-nifi-client-secret"
@@ -653,7 +623,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: pgadmin-password
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   password: admin
@@ -664,7 +634,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: pgadmin-keycloak
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   secret: "your-pgadmin-client-secret"
@@ -675,7 +645,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: mongo-express-password
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   password: admin
@@ -686,7 +656,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: mongo-express-keycloak
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   secret: "your-mongo-express-client-secret"
@@ -697,7 +667,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: jupyterlab-keycloak
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   secret: "your-jupyterlab-client-secret"
@@ -708,7 +678,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: kubernetes-dashboard-keycloak
-  namespace: keycloak-demo
+  namespace: stone-data-lake
 type: Opaque
 stringData:
   secret: "your-kubernetes-dashboard-client-secret"
