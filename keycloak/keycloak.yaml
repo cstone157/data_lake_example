@@ -1,7 +1,97 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: keycloak
+#   namespace: stone-data-lake
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: keycloak
+#   template:
+#     metadata:
+#       labels:
+#         app: keycloak
+#     spec:
+#       containers:
+#       - name: keycloak
+# #        image: jboss/keycloak:19.0.1
+#         image: keycloak/keycloak:20.0.5
+#         ports:
+#         - containerPort: 8080
+#         env:
+#         - name: KEYCLOAK_USER
+#           value: admin
+#         - name: KEYCLOAK_PASSWORD
+#           value: admin
+#         - name: DB_VENDOR
+#           value: postgres
+#         - name: DB_HOST
+#           value: postgresql
+#         - name: DB_PORT
+#           value: "5432"
+#         - name: DB_DATABASE
+#           value: keycloak
+#         - name: DB_USERNAME
+#           value: keycloak
+#         - name: DB_PASSWORD
+#           value: keycloak
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: keycloak
+#   namespace: stone-data-lake
+# spec:
+#   type: LoadBalancer
+#   ports:
+#   - port: 8080
+#     nodePort: 30000
+#     targetPort: 8080
+#   selector:
+#     app: keycloak
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: keycloak
+#   namespace: stone-data-lake
+#   labels:
+#     app: keycloak
+# spec:
+#   ports:
+#     - name: http
+#       port: 8080
+#       targetPort: 8080
+#       nodePort: 30000
+#   selector:
+#     app: keycloak
+#   type: LoadBalancer
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: stone-data-lake
+  labels:
+    app: keycloak
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 30000
+  selector:
+    app: keycloak
+  type: NodePort
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: keycloak
+  namespace: stone-data-lake
+  labels:
+    app: keycloak
 spec:
   replicas: 1
   selector:
@@ -13,36 +103,20 @@ spec:
         app: keycloak
     spec:
       containers:
-      - name: keycloak
-        image: jboss/keycloak:19.0.1
-        ports:
-        - containerPort: 8080
-        env:
-        - name: KEYCLOAK_USER
-          value: admin
-        - name: KEYCLOAK_PASSWORD
-          value: admin
-        - name: DB_VENDOR
-          value: postgres
-        - name: DB_HOST
-          value: postgresql
-        - name: DB_PORT
-          value: "5432"
-        - name: DB_DATABASE
-          value: keycloak
-        - name: DB_USERNAME
-          value: keycloak
-        - name: DB_PASSWORD
-          value: keycloak
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: keycloak
-spec:
-  type: LoadBalancer
-  ports:
-  - port: 8080
-    targetPort: 8080
-  selector:
-    app: keycloak
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:25.0.5
+          args: ["start-dev"]
+          env:
+            - name: KEYCLOAK_ADMIN
+              value: "admin"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: "admin"
+            - name: KC_PROXY
+              value: "edge"
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /realms/master
+              port: 8080

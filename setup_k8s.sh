@@ -128,6 +128,9 @@ fi
 #kubectl delete pv keycloak-pv postgres-pv
 #kubectl delete pv --all
 #kubectl delete secrets --all
+#kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all
+#kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
+
 
 ## TLS Certificate and key
 ## The openssl doesn't work in "git bash", need to run it in regular bash or powershell
@@ -160,10 +163,22 @@ export _password=$(echo -ne $default_password | base64)
 envsubst < data-lake.yaml | kubectl apply -f -
 
 ## Setup the postgresql pods
+printf "\n=============================================================================\nSetup Postgres Pod\n"
 #kubectl apply -f postgres/postgres.yaml
 envsubst < postgres/postgres.yaml | kubectl apply -f -
 
 ## Setup the pgadmin pod / service
+printf "\n=============================================================================\nSetup PgAdmin Pod\n"
 #kubectl apply -f pgadmin/pgadmin.yaml
 envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
 
+## Setup the Keycloak pod / service
+printf "\n=============================================================================\nSetup Keycloak Pod\n"
+envsubst < keycloak/keycloak.yaml | kubectl apply -f -
+
+
+
+
+# Show all of our relavent pods / services
+printf "\n=============================================================================\nResults\n"
+kubectl get all -o wide -n stone-data-lake
