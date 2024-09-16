@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: pgadmin-secret
+  namespace: stone-data-lake
 type: Opaque
 data:
   pgadmin-default-password: ${_password}
@@ -10,6 +11,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pgadmin
+  namespace: stone-data-lake
 spec:
   selector:
    matchLabels:
@@ -41,6 +43,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: pgadmin
+  namespace: stone-data-lake
   labels:
     app: pgadmin
 spec:

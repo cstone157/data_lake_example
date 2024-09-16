@@ -17,6 +17,7 @@ A simplified example of the data-lake using Kubernetes
 # KUBERNETES:
 #### - Get all resources
     - $ kubectl get all
+    - $ kubectl get all -n stone-data-lake
 #### - Delete all resources
     - $ kubectl delete --all namespaces
 #### - Connect to a pod and access it's commandline.
@@ -27,9 +28,12 @@ A simplified example of the data-lake using Kubernetes
     - $ kubectl describe pod <pod-name>
 #### - Delete all Persistent volumes
     - $ kubectl delete pvc --all 
+#### -
+    - $ kubectl apply -f <file_name>
+    - $ envsubst < <file_name> | kubectl apply -f -
 
 # RESOURCES
 ##### - https://dev.to/dm8ry/how-to-deploy-postgresql-db-server-and-pgadmin-in-kubernetes-a-how-to-guide-5fm0
 ##### - https://medium.com/@lukhee/aws-deploying-mongo-database-image-to-aws-eks-4916d7883c9f
 ##### - https://overcast.blog/provisioning-kubernetes-local-persistent-volumes-full-tutorial-147cfb20ec27
-
+##### - https://www.keycloak.org/operator/basic-deployment

@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: postgres-secret
+  namespace: stone-data-lake
   labels:
     app: postgres
 type: Opaque
@@ -15,6 +16,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-configmap
+  namespace: stone-data-lake
   labels:
     app: postgres
 data:
@@ -24,6 +26,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
+  namespace: stone-data-lake
 spec:
   selector:
    matchLabels:
@@ -63,47 +66,50 @@ spec:
           persistentVolumeClaim:
             claimName: postgres-pv-claim
 ---
-    kind: PersistentVolume
-    apiVersion: v1
-    metadata:
-      name: postgres-pv-volume
-      labels:
-        type: local
-        app: postgres
-    spec:
-      storageClassName: manual
-      capacity:
-        storage: 5Gi
-      accessModes:
-        - ReadWriteMany
-      hostPath:
-        path: "/mnt/data"
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: postgres-pv-volume
+  namespace: stone-data-lake
+  labels:
+    type: local
+    app: postgres
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/data"
 ---
-    kind: PersistentVolumeClaim
-    apiVersion: v1
-    metadata:
-      name: postgres-pv-claim
-      labels:
-        app: postgres
-    spec:
-      storageClassName: manual
-      accessModes:
-        - ReadWriteMany
-      resources:
-        requests:
-          storage: 5Gi
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-pv-claim
+  namespace: stone-data-lake
+  labels:
+    app: postgres
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
 ---
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: postgres
-      labels:
-        app: postgres
-    spec:
-       ports:
-        - name: postgres
-          port: 5432
-          nodePort: 30432
-       type: NodePort
-       selector:
-        app: postgres
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: stone-data-lake
+  labels:
+    app: postgres
+spec:
+    ports:
+    - name: postgres
+      port: 5432
+      nodePort: 30432
+    type: NodePort
+    selector:
+    app: postgres

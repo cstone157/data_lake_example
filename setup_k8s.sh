@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 ## Add a k8 pod, needs a name for the pod (mostly for readability purposes) and the path of the yaml
 ##     for creating our pod / pods
 ##
@@ -118,9 +119,51 @@ fi
 #kubectl get all -o wide
 
 
-eval 'export postgres_root_username_b64="admin"'
-eval 'export postgres_root_password_b64="admin"'
-eval 'export pgadmin_root_username_b64="admin@admin.com"'
-eval 'export pgadmin_root_password_b64="admin"'
-eval 'export keycloak_admin_username_b64="admin"'
-eval 'export keycloak_admin_password_b64="admin"'
+
+
+
+## Cleanup
+#kubectl delete namespace stone-data-lake
+#kubectl delete pvc --all
+#kubectl delete pv keycloak-pv postgres-pv
+#kubectl delete pv --all
+#kubectl delete secrets --all
+
+## TLS Certificate and key
+## The openssl doesn't work in "git bash", need to run it in regular bash or powershell
+#openssl req -subj '/CN=test.keycloak.org/O=Test Keycloak./C=US' -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+#kubectl create secret tls example-tls-secret --cert certificate.pem --key key.pem
+
+## Deploy Keycloak
+#kubectl create secret generic keycloak-db-secret --from-literal=username=admin --from-literal=password=admin
+#kubectl apply -f example-kc.yaml
+
+
+## Create data-lake
+#### Create our password/username for our secrests
+default_username="admin"
+default_password="admin"
+default_email="admin@admin.com"
+
+export postgres_root_username_b64=$(echo -ne $default_username | base64)
+export postgres_root_password_b64=$(echo -ne $default_password | base64)
+export pgadmin_root_username_b64=$(echo -ne $default_email | base64)
+export pgadmin_root_password_b64=$(echo -ne $default_password | base64)
+export keycloak_admin_username_b64=$(echo -ne $default_username | base64)
+export keycloak_admin_password_b64=$(echo -ne $default_password | base64)
+
+export _username=$(echo -ne $default_username | base64)
+export _password=$(echo -ne $default_password | base64)
+
+
+## Setup the namespace, configmap, and secrets
+envsubst < data-lake.yaml | kubectl apply -f -
+
+## Setup the postgresql pods
+#kubectl apply -f postgres/postgres.yaml
+envsubst < postgres/postgres.yaml | kubectl apply -f -
+
+## Setup the pgadmin pod / service
+#kubectl apply -f pgadmin/pgadmin.yaml
+envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
+
