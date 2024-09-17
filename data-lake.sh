@@ -160,7 +160,8 @@ then
 
     export postgres_root_username_b64=$(echo -ne $default_username | base64)
     export postgres_root_password_b64=$(echo -ne $default_password | base64)
-    export postgres_local_path="/run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data"
+    #export postgres_local_path="/run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data"
+    export postgres_local_path="data_lake_example\postgres\data"
 
     export pgadmin_root_username_b64=$(echo -ne $default_email | base64)
     export pgadmin_root_password_b64=$(echo -ne $default_password | base64)
@@ -170,26 +171,25 @@ then
     export _username=$(echo -ne $default_username | base64)
     export _password=$(echo -ne $default_password | base64)
 
+    echo $postgres_local_path
 
     ## Setup the namespace, configmap, and secrets
-    envsubst < data-lake.yaml | kubectl apply -f -
+#    envsubst < data-lake.yaml | kubectl apply -f -
 
     ## Setup the postgresql pods
     printf "\n=============================================================================\nSetup Postgres Pod\n"
     #kubectl apply -f postgres/postgres.yaml
-    envsubst < postgres/postgres.yaml | kubectl apply -f -
+#    envsubst < postgres/postgres.yaml | kubectl apply -f -
+    envsubst < postgres/postgres.yaml
 
     ## Setup the pgadmin pod / service
     printf "\n=============================================================================\nSetup PgAdmin Pod\n"
     #kubectl apply -f pgadmin/pgadmin.yaml
-    envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
+#    envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
 
     ## Setup the Keycloak pod / service
     printf "\n=============================================================================\nSetup Keycloak Pod\n"
-    envsubst < keycloak/keycloak.yaml | kubectl apply -f -
-
-
-
+#    envsubst < keycloak/keycloak.yaml | kubectl apply -f -
 
     # Show all of our relavent pods / services
     printf "\n=============================================================================\nResults\n"
