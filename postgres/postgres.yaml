@@ -11,7 +11,11 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: local-storage
   local:
-    path: /run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data
+#    path: /run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data
+    valueFrom:  
+      configMapKeyRef:
+        name: stone-data-lake-configmap
+        key: postgres-db-location
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -70,6 +74,12 @@ spec:
                configMapKeyRef:
                  name: stone-data-lake-configmap
                  key: postgres-dbname
+          lifecycle:
+            postStart:
+              exec:
+                #command: ["/bin/sh", "-c", {{cmd}}]
+                command: ["/bin/sh", "-c"]
+                args: ["su -c psql -U admin -d postgres 'CREATE DATABASE keycloak;' postgres"]
 
           volumeMounts:
             - mountPath: /var/lib/postgresql/data

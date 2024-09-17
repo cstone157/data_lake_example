@@ -32,3 +32,4 @@ metadata:
     app: postgres
 data:
   postgres-dbname: pg-data-lake
+  postgres-db-location: ${postgres_local_path}
