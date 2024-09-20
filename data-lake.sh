@@ -70,13 +70,39 @@ function add_jupyter_k8s_pod {
 }
 
 default_command="$1"
-
-## ================= SETUP COMMAND BLOCK ==================
+## ================ CLEANUP COMMAND BLOCK =================
 if [ "$default_command" == "cleanup" ]
 then
     clear
     echo "Start Cleaning up our Kubernetes data-lake enviroment"
     kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
+fi
+
+## ============ DOCKERFILE BUILD COMMAND BLOCK ============
+if [ "$default_command" == "docker-setup" ]
+then
+    clear
+    echo "Ensuring that the Docker registry is up and running:"
+
+    keycloak_db_username="keycloak"
+    keycloak_db_password="keycloak-password"
+    export keycloak_db_username="$keycloak_db_username"
+    export keycloak_db_password="$keycloak_db_password"
+
+
+    ## Local Registry
+    ## FIX-ME: REPLACE WITH A CHECK TO DETERMIN IF THE REGISTRY IS ALREADY RUNNING
+#    docker run -d -p 5000:5000 --restart=always --name registry registry:2
+
+    ## Build my dockerfiles
+    ### Postgres has some build files that need to be setup first
+    touch postgres/preloaded_data/01-keycloak.sql
+    envsubst < postgres/preloaded_data/01-keycloak > postgres/preloaded_data/01-keycloak.sql
+    docker build ./postgres/ -t localhost:5000/data-lake-postgres
+    rm postgres/preloaded_data/01-keycloak.sql
+
+    ## Push the docker-image to the local registry
+#    docker push localhost:5000/data-lake-postgres
 fi
 
 ## ================= SETUP COMMAND BLOCK ==================

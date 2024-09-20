@@ -79,7 +79,8 @@ spec:
           lifecycle:
             postStart:
               exec:
-                command: ["/bin/sh", "-c", "apt update"]
+#                command: ["/bin/sh", "-c", "apt update"]
+                command: ["/bin/sh", "-c", "su postgres -c 'psql -U admin -d postgres -c \"CREATE DATABASE keycloak;\"'"]
 #                command: ["/bin/sh", "-c", "su postgres -c 'psql -U admin -d postgres -c \"CREATE DATABASE keycloak;\"'"]
 #                command: ["/bin/sh", "-c", {{cmd}}]
 #                command: ["/bin/sh", "-c"]
