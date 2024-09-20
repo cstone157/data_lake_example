@@ -93,63 +93,62 @@ then
     fi
 
     ## ================ POSTGRES BLOCK ================
-    #printf "=============================================================================\nSetup Postgres Pod\n"
-    #add_k8s_pod "postgres" "postgres/postgres.yaml" "root" "password"
+#    printf "=============================================================================\nSetup Postgres Pod\n"
+#    add_k8s_pod "postgres" "postgres/postgres.yaml" "root" "password"
 
     ## ================= PGADMIN BLOCK ================
-    #printf "\n=============================================================================\nSetup PgAdmin Pod\n"
-    #add_k8s_pod "pgadmin" "pgadmin/pgadmin.yaml" -1 "password"
+#    printf "\n=============================================================================\nSetup PgAdmin Pod\n"
+#    add_k8s_pod "pgadmin" "pgadmin/pgadmin.yaml" -1 "password"
 
     ## ================== MONGO BLOCK =================
-    #printf "=============================================================================\nSetup Mongo Pod\n"
-    #add_k8_pod "mongo", "mongo/mongo-deploy.yaml" # Require the user to input the username/password
-    #add_k8s_pod "mongo" "mongo/mongo.yaml" "root" "password"
+#    printf "=============================================================================\nSetup Mongo Pod\n"
+#    add_k8_pod "mongo", "mongo/mongo-deploy.yaml" # Require the user to input the username/password
+#    add_k8s_pod "mongo" "mongo/mongo.yaml" "root" "password"
 
     ## ============== MONGO-EXPRESS BLOCK =============
-    #printf "=============================================================================\nSetup Mongo-Express Pod\n"
-    #add_k8s_pod "mongo-express" "mongo-express/mongo-express.yaml" "root" "password"
+#    printf "=============================================================================\nSetup Mongo-Express Pod\n"
+#    add_k8s_pod "mongo-express" "mongo-express/mongo-express.yaml" "root" "password"
 
 
     ## =============== JUPYTERHUB BLOCK ===============
-    #printf "=============================================================================\nSetup JupyterHub Pod\n"
-    #add_jupyter_k8s_pod
+#    printf "=============================================================================\nSetup JupyterHub Pod\n"
+#    add_jupyter_k8s_pod
 
-    #add_k8s_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
+#    add_k8s_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
     ## Get all the nodes
-    #kubectl get node
+#    kubectl get node
     ## label the node with local-storage
-    #kubectl label nodes <node-name> local-storage-available=true
+#    kubectl label nodes <node-name> local-storage-available=true
     ## Create the persistent volumes for the local hard-drive
-    #kubectl apply -f jupyter/jupyter-volume.yaml
+#    kubectl apply -f jupyter/jupyter-volume.yaml
 
 
     ## =============== REPORT/END BLOCK ===============
     # Show all of our relavent pods / services
-    #printf "\n=============================================================================\nResults\n"
-    #kubectl get all -o wide
+#    printf "\n=============================================================================\nResults\n"
+#    kubectl get all -o wide
 
 
 
 
 
     ## Cleanup
-    #kubectl delete namespace stone-data-lake
-    #kubectl delete pvc --all
-    #kubectl delete pv keycloak-pv postgres-pv
-    #kubectl delete pv --all
-    #kubectl delete secrets --all
-    #kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all
-    #kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
-
+#    kubectl delete namespace stone-data-lake
+#    kubectl delete pvc --all
+#    kubectl delete pv keycloak-pv postgres-pv
+#    kubectl delete pv --all
+#    kubectl delete secrets --all
+#    kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all
+#    kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
 
     ## TLS Certificate and key
     ## The openssl doesn't work in "git bash", need to run it in regular bash or powershell
-    #openssl req -subj '/CN=test.keycloak.org/O=Test Keycloak./C=US' -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
-    #kubectl create secret tls example-tls-secret --cert certificate.pem --key key.pem
+#    openssl req -subj '/CN=test.keycloak.org/O=Test Keycloak./C=US' -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+#    kubectl create secret tls example-tls-secret --cert certificate.pem --key key.pem
 
     ## Deploy Keycloak
-    #kubectl create secret generic keycloak-db-secret --from-literal=username=admin --from-literal=password=admin
-    #kubectl apply -f example-kc.yaml
+#    kubectl create secret generic keycloak-db-secret --from-literal=username=admin --from-literal=password=admin
+#    kubectl apply -f example-kc.yaml
 
 
     ## Create data-lake
@@ -160,8 +159,8 @@ then
 
     export postgres_root_username_b64=$(echo -ne $default_username | base64)
     export postgres_root_password_b64=$(echo -ne $default_password | base64)
-    #export postgres_local_path="/run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data"
-    export postgres_local_path="data_lake_example\postgres\data"
+    export postgres_local_path="//run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data"
+#    export postgres_local_path="data_lake_example\postgres\data"
 
     export pgadmin_root_username_b64=$(echo -ne $default_email | base64)
     export pgadmin_root_password_b64=$(echo -ne $default_password | base64)
@@ -171,25 +170,24 @@ then
     export _username=$(echo -ne $default_username | base64)
     export _password=$(echo -ne $default_password | base64)
 
-    echo $postgres_local_path
+#    echo $postgres_local_path
 
     ## Setup the namespace, configmap, and secrets
-#    envsubst < data-lake.yaml | kubectl apply -f -
+    envsubst < data-lake.yaml | kubectl apply -f -
 
     ## Setup the postgresql pods
     printf "\n=============================================================================\nSetup Postgres Pod\n"
     #kubectl apply -f postgres/postgres.yaml
-#    envsubst < postgres/postgres.yaml | kubectl apply -f -
-    envsubst < postgres/postgres.yaml
+    envsubst < postgres/postgres.yaml | kubectl apply -f -
 
     ## Setup the pgadmin pod / service
     printf "\n=============================================================================\nSetup PgAdmin Pod\n"
     #kubectl apply -f pgadmin/pgadmin.yaml
-#    envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
+    envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
 
     ## Setup the Keycloak pod / service
     printf "\n=============================================================================\nSetup Keycloak Pod\n"
-#    envsubst < keycloak/keycloak.yaml | kubectl apply -f -
+    envsubst < keycloak/keycloak.yaml | kubectl apply -f -
 
     # Show all of our relavent pods / services
     printf "\n=============================================================================\nResults\n"
