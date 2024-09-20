@@ -21,6 +21,9 @@ data:
     pgadmin_root_password: ${pgadmin_root_password_b64}
     keycloak_admin_username: ${keycloak_admin_username_b64}
     keycloak_admin_password: ${keycloak_admin_password_b64}
+    keycloak_db_username: ${keycloak_db_username_b64}
+    keycloak_db_password: ${keycloak_db_password_b64}
+    keycloak_db: ${keycloak_db_b64}
 
 ---
 apiVersion: v1

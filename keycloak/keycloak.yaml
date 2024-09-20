@@ -34,7 +34,8 @@ spec:
     spec:
       containers:
         - name: keycloak
-          image: quay.io/keycloak/keycloak:25.0.5
+#          image: quay.io/keycloak/keycloak:25.0.5
+          image: localhost:5000/data-lake-keycloak
           args: ["start-dev"]
           env:
             - name: KEYCLOAK_ADMIN
@@ -49,17 +50,29 @@ spec:
                   key: keycloak_admin_password
             - name: KC_PROXY
               value: "edge"
-#            - name: DB_VENDOR
-#              value: postgres
-#            - name: DB_HOST
-#              value: postgresql
-#            - name: DB_PORT
-#              value: "5432"
-#            - name: DB_DATABASE
+            - name: DB_VENDOR
+              value: postgres
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: stone-data-lake-secret
+                  key: keycloak_db
 #              value: keycloak
-#            - name: DB_USERNAME
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: stone-data-lake-secret
+                  key: keycloak_db_username
 #              value: keycloak
-#            - name: DB_PASSWORD
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: stone-data-lake-secret
+                  key: keycloak_db_password
 #              value: keycloak
           ports:
             - name: http
