@@ -1,49 +1,6 @@
 #!/bin/bash
 
 
-## Add a k8 pod, needs a name for the pod (mostly for readability purposes) and the path of the yaml
-##     for creating our pod / pods
-##
-## Variable Definitions
-##     - #1 => Name of the k8 to deploy (Required)
-##     - #2 => path of the deployment yaml (Required)
-##     - #3 => username to add to the k8 pod, if you don't pass one, then it will use read to get one.
-##          If you pass -1, then it won't use one.
-##     - #4 => password to add to the k8 pod, if you don't pass one, then it will use read to get one.
-##          If you pass -1, then it won't use one.
-function add_k8s_pod {
-    name=$1
-    path=$2
-    _username=$3
-    _password=$4
-
-    if [ -z ${_username+x} ];
-    then
-        read -p "Enter $name app's username:" _username
-    fi
-    if [ -z ${_password+x} ];
-    then
-        read -p "Enter $name app's password (for username, if one selected):" _password
-    fi
-
-    # Exclude the username/password, if it is -1
-    if [ $_username != -1 ];
-    then
-        _username=$(echo -ne "$_username" | base64);
-        eval 'export _username="$_username"'
-    fi
-    if [ $_password != -1 ];
-    then
-        _password=$(echo -ne "$_password" | base64);
-        eval 'export _password="$_password"'
-    fi
-
-    #echo "name: $name, path: $path, username: $_username, password: $_password, " # For Debugging
-    # Generate our k8s pod (use envsubst, for substitutions)
-    printf "\n=============================================================================\nExecuting the $path, to create the service $name\n"
-    envsubst < $path | kubectl apply -f -
-}
-
 
 ## Helper function for creating a k8s pod
 function add_jupyter_k8s_pod {
@@ -69,47 +26,64 @@ function add_jupyter_k8s_pod {
     envsubst < $path | kubectl apply -f -
 }
 
-default_command="$1"
-## ================ CLEANUP COMMAND BLOCK =================
-if [ "$default_command" == "cleanup" ]
-then
+
+## =================================================================================================================================================================================
+##                                                                      Purge our K8S and/or Docker enviroment                                                                      
+## =================================================================================================================================================================================
+function cleanupCommand {
+    docker=false
+    kubernetes=false
+
+    if [ -z ${1+x} ] || [ $1 == "--help" ]; then
+        printf "When using the cleanup command, you need to specify:\n\t-a\tClean everything (kubernetes and docker)\n\t-k\tClean Kubernetes\n\t-d\tClean Docker"
+        exit 0
+    elif [ $1 == "-a" ]; then
+        docker=true
+        kubernetes=true
+    elif [ $1 == "-k" ]; then
+        kubernetes=true
+    elif [ $1 == "-d" ]; then
+        docker=true
+    fi
+
     clear
-    echo "Start Cleaning up our Kubernetes data-lake enviroment"
-    kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
-fi
+    ## If any of our parameters are kubernetes, then go ahead and cleanup our kubernetes enviroment
+    if [ $kubernetes ]; then
+        echo "== Start Cleaning up our Kubernetes data-lake enviroment"
+        kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
+    fi
 
-## ============ DOCKERFILE BUILD COMMAND BLOCK ============
-if [ "$default_command" == "docker-setup" ]
-then
-    clear
-    echo "Ensuring that the Docker registry is up and running:"
+    ## If any of our parameters are docker, then go ahead and cleanup our docker enviroment
+    if [ $docker ]; then
+        if [ $kubernetes ]; then
+            echo ""
+        fi
 
-    keycloak_db_username="keycloak"
-    keycloak_db_password="keycloak-password"
-    export keycloak_db_username="$keycloak_db_username"
-    export keycloak_db_password="$keycloak_db_password"
+        echo "== Start Cleaning up our Docker data-lake enviroment"
+        docker image rm localhost:5000/data-lake-postgres
+        docker container stop registry
+        docker container rm registry
+    fi
+}
 
+## =================================================================================================================================================================================
+##                                                                      Build our K8S and/or Docker enviroment                                                                      
+## =================================================================================================================================================================================
+function buildCommand {
+    docker=false
+    kubernetes=false
 
-    ## Local Registry
-    ## FIX-ME: REPLACE WITH A CHECK TO DETERMIN IF THE REGISTRY IS ALREADY RUNNING
-#    docker run -d -p 5000:5000 --restart=always --name registry registry:2
-
-    ## Build my dockerfiles
-    ### Postgres has some build files that need to be setup first
-    touch postgres/preloaded_data/01-keycloak.sql
-    envsubst < postgres/preloaded_data/01-keycloak > postgres/preloaded_data/01-keycloak.sql
-    docker build ./postgres/ -t localhost:5000/data-lake-postgres
-    rm postgres/preloaded_data/01-keycloak.sql
-
-    ## Push the docker-image to the local registry
-#    docker push localhost:5000/data-lake-postgres
-fi
-
-## ================= SETUP COMMAND BLOCK ==================
-if [ "$default_command" == "setup" ]
-then
-    clear
-    echo "Start Setting up our Kubernetes data-lake enviroment"
+    if [ -z ${1+x} ] || [ $1 == "--help" ]; then
+        printf "When using the build command, you need to specify:\n\t-a\Build everything (kubernetes and docker)\n\t-k\tBuild Kubernetes\n\t-d\tBuild Docker"
+        exit 0
+    elif [ $1 == "-a" ]; then
+        docker=true
+        kubernetes=true
+    elif [ $1 == "-k" ]; then
+        kubernetes=true
+    elif [ $1 == "-d" ]; then
+        docker=true
+    fi
 
     # Check if the commands we need to run are installed
     if ! command -v envsubst &> /dev/null
@@ -118,104 +92,144 @@ then
         exit 1
     fi
 
-    ## ================ POSTGRES BLOCK ================
-#    printf "=============================================================================\nSetup Postgres Pod\n"
-#    add_k8s_pod "postgres" "postgres/postgres.yaml" "root" "password"
 
-    ## ================= PGADMIN BLOCK ================
-#    printf "\n=============================================================================\nSetup PgAdmin Pod\n"
-#    add_k8s_pod "pgadmin" "pgadmin/pgadmin.yaml" -1 "password"
+    clear
 
-    ## ================== MONGO BLOCK =================
-#    printf "=============================================================================\nSetup Mongo Pod\n"
-#    add_k8_pod "mongo", "mongo/mongo-deploy.yaml" # Require the user to input the username/password
-#    add_k8s_pod "mongo" "mongo/mongo.yaml" "root" "password"
-
-    ## ============== MONGO-EXPRESS BLOCK =============
-#    printf "=============================================================================\nSetup Mongo-Express Pod\n"
-#    add_k8s_pod "mongo-express" "mongo-express/mongo-express.yaml" "root" "password"
+    ## Build our enviroment variables that we will need
+    keycloak_db_username="keycloak"
+    keycloak_db_password="keycloak-password"
+    export keycloak_db_username="$keycloak_db_username"
+    export keycloak_db_password="$keycloak_db_password"
 
 
-    ## =============== JUPYTERHUB BLOCK ===============
-#    printf "=============================================================================\nSetup JupyterHub Pod\n"
-#    add_jupyter_k8s_pod
+    if [ $docker ]; then
+        echo "Ensuring that the Docker registry is up and running:"
 
-#    add_k8s_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
-    ## Get all the nodes
-#    kubectl get node
-    ## label the node with local-storage
-#    kubectl label nodes <node-name> local-storage-available=true
-    ## Create the persistent volumes for the local hard-drive
-#    kubectl apply -f jupyter/jupyter-volume.yaml
+        ## Local Registry
+        ## FIX-ME: REPLACE WITH A CHECK TO DETERMIN IF THE REGISTRY IS ALREADY RUNNING
+#        docker run -d -p 5000:5000 --restart=always --name registry registry:2
 
+        ## Build my dockerfiles
+        ### Postgres has some build files that need to be setup first
+        touch postgres/preloaded_data/01-keycloak.sql
+        envsubst < postgres/preloaded_data/01-keycloak > postgres/preloaded_data/01-keycloak.sql
+        docker build ./postgres/ -t localhost:5000/data-lake-postgres
+        rm postgres/preloaded_data/01-keycloak.sql
 
-    ## =============== REPORT/END BLOCK ===============
-    # Show all of our relavent pods / services
-#    printf "\n=============================================================================\nResults\n"
-#    kubectl get all -o wide
+        ## Push the docker-image to the local registry
+#        docker push localhost:5000/data-lake-postgres
+    fi
 
-
-
-
-
-    ## Cleanup
-#    kubectl delete namespace stone-data-lake
-#    kubectl delete pvc --all
-#    kubectl delete pv keycloak-pv postgres-pv
-#    kubectl delete pv --all
-#    kubectl delete secrets --all
-#    kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all
-#    kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
-
-    ## TLS Certificate and key
-    ## The openssl doesn't work in "git bash", need to run it in regular bash or powershell
-#    openssl req -subj '/CN=test.keycloak.org/O=Test Keycloak./C=US' -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
-#    kubectl create secret tls example-tls-secret --cert certificate.pem --key key.pem
-
-    ## Deploy Keycloak
-#    kubectl create secret generic keycloak-db-secret --from-literal=username=admin --from-literal=password=admin
-#    kubectl apply -f example-kc.yaml
+    if [ $kubernetes ]; then
+        if [ $docker ]; then
+            echo ""
+        fi
+        
+        echo "Start Setting up our Kubernetes data-lake enviroment"
 
 
-    ## Create data-lake
-    #### Create our password/username for our secrests
-    default_username="admin"
-    default_password="admin"
-    default_email="admin@admin.com"
+        ## ================ POSTGRES BLOCK ================
+#        printf "=============================================================================\nSetup Postgres Pod\n"
+#        add_k8s_pod "postgres" "postgres/postgres.yaml" "root" "password"
 
-    export postgres_root_username_b64=$(echo -ne $default_username | base64)
-    export postgres_root_password_b64=$(echo -ne $default_password | base64)
-    export postgres_local_path="//run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data"
-#    export postgres_local_path="data_lake_example\postgres\data"
+        ## ================= PGADMIN BLOCK ================
+#        printf "\n=============================================================================\nSetup PgAdmin Pod\n"
+#        add_k8s_pod "pgadmin" "pgadmin/pgadmin.yaml" -1 "password"
 
-    export pgadmin_root_username_b64=$(echo -ne $default_email | base64)
-    export pgadmin_root_password_b64=$(echo -ne $default_password | base64)
-    export keycloak_admin_username_b64=$(echo -ne $default_username | base64)
-    export keycloak_admin_password_b64=$(echo -ne $default_password | base64)
+        ## ================== MONGO BLOCK =================
+#        printf "=============================================================================\nSetup Mongo Pod\n"
+#        add_k8_pod "mongo", "mongo/mongo-deploy.yaml" # Require the user to input the username/password
+#        add_k8s_pod "mongo" "mongo/mongo.yaml" "root" "password"
 
-    export _username=$(echo -ne $default_username | base64)
-    export _password=$(echo -ne $default_password | base64)
+        ## ============== MONGO-EXPRESS BLOCK =============
+#        printf "=============================================================================\nSetup Mongo-Express Pod\n"
+#        add_k8s_pod "mongo-express" "mongo-express/mongo-express.yaml" "root" "password"
 
-#    echo $postgres_local_path
 
-    ## Setup the namespace, configmap, and secrets
-    envsubst < data-lake.yaml | kubectl apply -f -
+        ## =============== JUPYTERHUB BLOCK ===============
+#        printf "=============================================================================\nSetup JupyterHub Pod\n"
+#        add_jupyter_k8s_pod
 
-    ## Setup the postgresql pods
-    printf "\n=============================================================================\nSetup Postgres Pod\n"
-    #kubectl apply -f postgres/postgres.yaml
-    envsubst < postgres/postgres.yaml | kubectl apply -f -
+#        add_k8s_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
+        ## Get all the nodes
+#        kubectl get node
+        ## label the node with local-storage
+#        kubectl label nodes <node-name> local-storage-available=true
+        ## Create the persistent volumes for the local hard-drive
+#        kubectl apply -f jupyter/jupyter-volume.yaml
 
-    ## Setup the pgadmin pod / service
-    printf "\n=============================================================================\nSetup PgAdmin Pod\n"
-    #kubectl apply -f pgadmin/pgadmin.yaml
-    envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
 
-    ## Setup the Keycloak pod / service
-    printf "\n=============================================================================\nSetup Keycloak Pod\n"
-    envsubst < keycloak/keycloak.yaml | kubectl apply -f -
+        ## Cleanup
+#        kubectl delete namespace stone-data-lake
+#        kubectl delete pvc --all
+#        kubectl delete pv keycloak-pv postgres-pv
+#        kubectl delete pv --all
+#        kubectl delete secrets --all
+#        kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all
+#        kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
 
-    # Show all of our relavent pods / services
-    printf "\n=============================================================================\nResults\n"
-    kubectl get all -o wide -n stone-data-lake
+        ## TLS Certificate and key
+        ## The openssl doesn't work in "git bash", need to run it in regular bash or powershell
+#        openssl req -subj '/CN=test.keycloak.org/O=Test Keycloak./C=US' -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+#        kubectl create secret tls example-tls-secret --cert certificate.pem --key key.pem
+
+        ## Deploy Keycloak
+#        kubectl create secret generic keycloak-db-secret --from-literal=username=admin --from-literal=password=admin
+#        kubectl apply -f example-kc.yaml
+
+
+        ## Create data-lake
+        #### Create our password/username for our secrests
+        default_username="admin"
+        default_password="admin"
+        default_email="admin@admin.com"
+
+        export postgres_root_username_b64=$(echo -ne $default_username | base64)
+        export postgres_root_password_b64=$(echo -ne $default_password | base64)
+        export postgres_local_path="//run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data"
+#        export postgres_local_path="data_lake_example\postgres\data"
+
+        export pgadmin_root_username_b64=$(echo -ne $default_email | base64)
+        export pgadmin_root_password_b64=$(echo -ne $default_password | base64)
+        export keycloak_admin_username_b64=$(echo -ne $default_username | base64)
+        export keycloak_admin_password_b64=$(echo -ne $default_password | base64)
+
+        export _username=$(echo -ne $default_username | base64)
+        export _password=$(echo -ne $default_password | base64)
+
+#        echo $postgres_local_path
+
+        ## Setup the namespace, configmap, and secrets
+        envsubst < data-lake.yaml | kubectl apply -f -
+
+        ## Setup the postgresql pods
+        printf "\n=============================================================================\nSetup Postgres Pod\n"
+        #kubectl apply -f postgres/postgres.yaml
+        envsubst < postgres/postgres.yaml | kubectl apply -f -
+
+        ## Setup the pgadmin pod / service
+        printf "\n=============================================================================\nSetup PgAdmin Pod\n"
+        #kubectl apply -f pgadmin/pgadmin.yaml
+        envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
+
+        ## Setup the Keycloak pod / service
+        printf "\n=============================================================================\nSetup Keycloak Pod\n"
+        envsubst < keycloak/keycloak.yaml | kubectl apply -f -
+
+        # ============== Show all of our relavent pods / services ==============
+        printf "\n=============================================================================\nResults\n"
+        kubectl get all -o wide -n stone-data-lake        
+    fi
+}
+
+
+_command="$1"
+## ========== EXECUTE THE CLEANUP COMMAND BLOCK ===========
+if [ "$_command" == "cleanup" ]; then
+    cleanupCommand $2
+fi
+
+## ============== EXECUTE BUILD COMMAND BLOCK =============
+if [ "$_command" == "build" ]; then
+    buildCommand $2
 fi

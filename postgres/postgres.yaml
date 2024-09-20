@@ -58,7 +58,8 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:14.5
+#          image: postgres:14.5
+          image: localhost:5000/data-lake-postgres
           imagePullPolicy: "IfNotPresent"
           env:
            - name: POSTGRES_USER
@@ -76,16 +77,6 @@ spec:
                configMapKeyRef:
                  name: stone-data-lake-configmap
                  key: postgres-dbname
-          lifecycle:
-            postStart:
-              exec:
-#                command: ["/bin/sh", "-c", "apt update"]
-                command: ["/bin/sh", "-c", "su postgres -c 'psql -U admin -d postgres -c \"CREATE DATABASE keycloak;\"'"]
-#                command: ["/bin/sh", "-c", "su postgres -c 'psql -U admin -d postgres -c \"CREATE DATABASE keycloak;\"'"]
-#                command: ["/bin/sh", "-c", {{cmd}}]
-#                command: ["/bin/sh", "-c"]
-#                args: ["su -c psql -U admin -d postgres 'CREATE DATABASE keycloak;' postgres"]
-
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: postgredb
