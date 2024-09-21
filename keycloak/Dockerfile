@@ -5,10 +5,7 @@
 #FROM quay.io/keycloak/keycloak:latest
 FROM quay.io/keycloak/keycloak:24.0.2
 
-COPY /keycloak_startup.sh   /opt/keycloak
+#COPY /setup.sh   /opt/keycloak/setup.sh
 
 # Original entrypoint for keycloak
 #ENTRYPOINT ["/opt/keycloak/keycloak_startup.sh"]
-
-# Our custom startup, that will create our 
-ENTRYPOINT ["/opt/keycloak/keycloak_startup.sh"]
