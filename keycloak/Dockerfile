@@ -7,6 +7,10 @@ FROM keycloak/keycloak:24.0.2
 
 COPY /setup.sh   /opt/keycloak/setup.sh
 
+ENV KEYCLOAK_ADMIN=admin
+ENV KEYCLOAK_ADMIN_PASSWORD=admin
+
+
 # Original entrypoint for keycloak
 #ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 # Start the KC server and then run our setup script
