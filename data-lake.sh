@@ -213,6 +213,8 @@ function buildCommand {
         #kubectl apply -f pgadmin/pgadmin.yaml
         envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
 
+        sleep 5s
+
         ### Setup the Keycloak pod / service
         printf "\n=============================================================================\nSetup Keycloak Pod\n"
         envsubst < keycloak/keycloak.yaml | kubectl apply -f -

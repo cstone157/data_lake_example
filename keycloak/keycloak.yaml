@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: keycloak
+  name: keycloak-service
   namespace: stone-data-lake
   labels:
     app: keycloak
@@ -36,7 +36,7 @@ spec:
         - name: keycloak
 #          image: quay.io/keycloak/keycloak:25.0.5
           image: localhost:5000/data-lake-keycloak
-          args: ["start-dev"]
+#          args: ["start-dev"]
           env:
             - name: KEYCLOAK_ADMIN
               valueFrom:
@@ -51,28 +51,38 @@ spec:
             - name: KC_PROXY
               value: "edge"
             - name: DB_VENDOR
-              value: postgres
-            - name: DB_HOST
-              value: postgres
-            - name: DB_PORT
-              value: "5432"
+              value: POSTGRES
+            - name: DB_ADDR
+              value: postgres-service
             - name: DB_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: stone-data-lake-secret
-                  key: keycloak_db
-#              value: keycloak
-            - name: DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: stone-data-lake-secret
-                  key: keycloak_db_username
-#              value: keycloak
+              value: keycloak
+            - name: DB_USER
+              value: keycloak
             - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: stone-data-lake-secret
-                  key: keycloak_db_password
+              value: keycloak-password
+#            - name: DB_VENDOR
+#              value: postgres
+#            - name: DB_HOST
+#              value: postgres-service
+#            - name: DB_PORT
+#              value: "5432"
+#            - name: DB_DATABASE
+#              valueFrom:
+#                secretKeyRef:
+#                  name: stone-data-lake-secret
+#                  key: keycloak_db
+#              value: keycloak
+#            - name: DB_USERNAME
+#              valueFrom:
+#                secretKeyRef:
+#                  name: stone-data-lake-secret
+#                  key: keycloak_db_username
+#              value: keycloak
+#            - name: DB_PASSWORD
+#              valueFrom:
+#                secretKeyRef:
+#                  name: stone-data-lake-secret
+#                  key: keycloak_db_password
 #              value: keycloak
           ports:
             - name: http
