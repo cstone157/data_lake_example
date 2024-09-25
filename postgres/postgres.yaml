@@ -88,7 +88,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service
+  name: postgres
   namespace: stone-data-lake
 spec:
   type: ClusterIP

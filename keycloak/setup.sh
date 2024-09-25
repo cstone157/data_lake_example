@@ -4,9 +4,9 @@ set -m
 kc_cmd="/opt/keycloak/bin/kc.sh";
 
 ## Start the keycloak server in the background
-#eval "${kc_cmd} start-dev &"
+eval "${kc_cmd} start-dev &"
 #eval "${kc_cmd} start &"
-eval "${kc_cmd} start --optimized &"
+#eval "${kc_cmd} start --optimized &"
 
 # Wait 
 sleep 15s
