@@ -74,6 +74,10 @@ function cleanupCommand {
             sleep 3s
             printf "."
             sleep 3s
+            printf "."
+            sleep 3s
+            printf "."
+            sleep 3s
             printf ".\n"
         fi
 
