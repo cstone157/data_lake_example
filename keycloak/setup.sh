@@ -4,8 +4,9 @@ set -m
 kc_cmd="/opt/keycloak/bin/kc.sh";
 
 ## Start the keycloak server in the background
-#/opt/keycloak/bin/kc.sh &
 eval "${kc_cmd} start-dev &"
+#eval "${kc_cmd} start &"
+#eval "${kc_cmd} start --optimized &"
 
 # Wait 
 sleep 15s
@@ -16,7 +17,6 @@ while [ $exit_loop == 0 ]
 do
     ## Authenticate our connection to the api of keycloak
     echo "========== Attempting to configure connection to enable creating realms and services"
-    #realm_result="$(/opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin)"
     realm_result="$(/opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin 2>&1 /dev/null)"
 
     ERR_MSG_1="WARN"
@@ -31,15 +31,6 @@ do
         fi
 
         sleep 15s
-#    elif [[ $realm_result == *"ERROR"* ]]; then
-#        exit_loop=false
-#
-#        loop_count=$loop_count+1
-#        echo "== FAILED to connect $loop_count times"
-#        if [ $loop_count >= 15 ]; then
-#            exit_loop=true
-#        fi
-#
     else
         exit_loop=1
 
