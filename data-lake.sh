@@ -1,6 +1,20 @@
 #!/bin/bash
 
-
+## Wait for a certain number of seconds, adding a "." every second
+function pause_script {
+    if [ -z "$1" ]; then
+        ## Do nothing if no arguments are passed
+        printf "ERROR: No arguments passed to 'pause_script', must be used something like 'pause_script 15'\n"
+    else
+        duration=$1
+        while [ $duration -gt 0 ]; do
+            printf "."
+            sleep 1s
+            duration=$(($duration-1))
+        done
+        printf "\n"
+    fi
+}
 
 ## Helper function for creating a k8s pod
 function add_jupyter_k8s_pod {
@@ -57,28 +71,15 @@ function cleanupCommand {
 #        kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all
 #        kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
 
-        printf "== Start Cleaning up our Kubernetes data-lake enviroment"
-        kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
+        printf "== Start Cleaning up our Kubernetes data-lake enviroment\n"
+        kubectl delete namespace stone-data-lake && kubectl delete pvc --all && kubectl delete pv --all && kubectl delete secrets --all && kubectl delete configmap --all
     fi
 
     ## If any of our parameters are docker, then go ahead and cleanup our docker enviroment
     if [ $docker == true ]; then
         if [ $kubernetes == true ]; then
-            printf "."
-            sleep 3s
-            printf "."
-            sleep 3s
-            printf "."
-            sleep 3s
-            printf "."
-            sleep 3s
-            printf "."
-            sleep 3s
-            printf "."
-            sleep 3s
-            printf "."
-            sleep 3s
-            printf ".\n"
+            printf "\nWaiting for Kubernetes to finish actions:\n"
+            pause_script 20
         fi
 
         printf "\n== Start Cleaning up our Docker data-lake enviroment"
@@ -110,7 +111,7 @@ function buildCommand {
     # Check if the commands we need to run are installed
     if ! command -v envsubst &> /dev/null
     then
-        echo "envsubst could not be found, used for substitutions.  Please install with something like:\n     $ apt-getg y install getext-base\nInstallation, with vary based on distro."
+        printf "envsubst could not be found, used for substitutions.  Please install with something like:\n     $ apt-getg y install getext-base\nInstallation, with vary based on distro.\n"
         exit 1
     fi
 
@@ -179,9 +180,9 @@ function buildCommand {
 
     if [ $kubernetes == true ]; then
         if [ $docker == true ]; then
-            echo ""
+            printf "\n"
         fi
-        echo "Start Setting up our Kubernetes data-lake enviroment"
+        printf "Start Setting up our Kubernetes data-lake enviroment\n"
 
 
 
