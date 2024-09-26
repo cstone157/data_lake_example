@@ -37,3 +37,9 @@ A simplified example of the data-lake using Kubernetes
 ##### - https://medium.com/@lukhee/aws-deploying-mongo-database-image-to-aws-eks-4916d7883c9f
 ##### - https://overcast.blog/provisioning-kubernetes-local-persistent-volumes-full-tutorial-147cfb20ec27
 ##### - https://www.keycloak.org/operator/basic-deployment
+
+
+## Note - Pausing to work on adding a plugin to mace, was working on adding the OAuth to the PgAdmin server.  Files created, secret not being passed around, need to update the sh to generate and insert into the necissary files prior to creating the DockerImages.
+
+##### - https://www.olavgg.com/show/how-to-configure-pgadmin-4-with-oauth2-and-keycloak
+##### - https://www.pgadmin.org/docs/pgadmin4/latest/config_py.html

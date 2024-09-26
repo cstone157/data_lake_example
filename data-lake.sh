@@ -149,7 +149,9 @@ function buildCommand {
     export _password=$(echo -ne $default_password | base64)
 #    echo $postgres_local_path
 
-
+    # Save the CLIENT_SECRET, used for the KeyCloak and PgAdmin OAuth
+    export CLIENT_SECRET=`tr -dc A-Za-z0-9 </dev/urandom | head -c 24 ; echo ''`
+    ## TO-DO: Append to the pgadmin and keycloak necissary files
 
     if [ $docker == true ]; then
         ## Local Registry
