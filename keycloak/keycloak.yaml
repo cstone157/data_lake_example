@@ -1,19 +1,3 @@
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: keycloak-service
-#  namespace: stone-data-lake
-#  labels:
-#    app: keycloak
-#spec:
-#  ports:
-#    - name: http
-#      port: 8080
-#      targetPort: 8080
-#      nodePort: 30000
-#  selector:
-#    app: keycloak
-#  type: NodePort
 apiVersion: v1
 kind: Service
 metadata:
@@ -60,8 +44,6 @@ spec:
     spec:
       containers:
         - name: keycloak
-#          image: quay.io/keycloak/keycloak:25.0.5
-#          args: ["start-dev"]
           image: localhost:5000/data-lake-keycloak
           env:
             - name: KEYCLOAK_ADMIN
@@ -127,57 +109,3 @@ spec:
               requests:
                 memory: 256Mi
                 cpu: "0.2"
-
-#            - name: KEYCLOAK_DB_URL
-#              value: jdbc:postgresql://postgres:5432/keycloak
-#            - name: KEYCLOAK_DB_USER
-#              value: keycloak
-#            - name: KEYCLOAK_DB_PASSWORD
-#              value: keycloak-password
-
-#            - name: KC_PROXY
-#              value: "edge"
-#            - name: DB_VENDOR
-#              value: POSTGRES
-#            - name: DB_ADDR
-#              value: postgres-service
-#            - name: DB_PORT
-#              value: "5432"
-#            - name: DB_DATABASE
-#              value: keycloak
-#            - name: DB_USER
-#              value: keycloak
-#            - name: DB_PASSWORD
-#              value: keycloak-password
-#            - name: DB_VENDOR
-#              value: postgres
-#            - name: DB_HOST
-#              value: postgres-service
-#            - name: DB_PORT
-#              value: "5432"
-#            - name: DB_DATABASE
-#              valueFrom:
-#                secretKeyRef:
-#                  name: stone-data-lake-secret
-#                  key: keycloak_db
-#              value: keycloak
-#            - name: DB_USERNAME
-#              valueFrom:
-#                secretKeyRef:
-#                  name: stone-data-lake-secret
-#                  key: keycloak_db_username
-#              value: keycloak
-#            - name: DB_PASSWORD
-#              valueFrom:
-#                secretKeyRef:
-#                  name: stone-data-lake-secret
-#                  key: keycloak_db_password
-#              value: keycloak
-
-#          ports:
-#            - name: http
-#              containerPort: 8080
-#          readinessProbe:
-#            httpGet:
-#              path: /realms/master
-#              port: 8080
