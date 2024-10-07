@@ -5,8 +5,6 @@ kc_cmd="/opt/keycloak/bin/kc.sh";
 
 ## Start the keycloak server in the background
 eval "${kc_cmd} start-dev &"
-#eval "${kc_cmd} start &"
-#eval "${kc_cmd} start --optimized &"
 
 # Wait 
 sleep 15s
@@ -38,6 +36,11 @@ do
         echo "========== - Creating data_lake realm"
         /opt/keycloak/bin/kcadm.sh create realms -s realm=data_lake -s enabled=true -o
         #/opt/keycloak/bin/kcadm.sh create clients -r data_lake -s clientId=nifi -s 'redirectUris=["http://localhost:8980/myapp/*"]' -i
+
+
+        ## Adding your client for PgAdmin
+        export CLIENT_SECRET="${CLIENT_SECRET}"
+        bin/kcadm.sh create clients -r data_lake -f clients/pgadmin.json
     fi
 done
 
