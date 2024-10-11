@@ -8,5 +8,10 @@ FROM keycloak/keycloak:21.0.2
 
 COPY /setup.sh   /opt/keycloak/setup.sh
 
+# Copy all of our clients over to the 
+RUN mkdir -p /opt/keycloak/clients
+COPY ./clients/pgadmin.json   /opt/keycloak/clients/pgadmin.json
+
+
 # Original entrypoint for keycloak
 ENTRYPOINT ["/opt/keycloak/setup.sh"]
