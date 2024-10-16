@@ -38,5 +38,5 @@ function build_variables {
 
     # Save the CLIENT_SECRET, used for the KeyCloak and PgAdmin OAuth
     export CLIENT_SECRET=`tr -dc A-Za-z0-9 </dev/urandom | head -c 24 ; echo ''`
-    ## TO-DO: Append to the pgadmin and keycloak necissary files
+    
 }

@@ -43,16 +43,28 @@ function buildDockerImages {
     buildRegistry
 
     ### Build my dockerfiles
-    #### Postgres has some build files that need to be setup first
     printf "\nBuilding our docker image and configuration files\n"
+
+    #### Postgres has some build files that need to be setup first
     touch postgres/preloaded_data/01-keycloak.sql
     envsubst < postgres/preloaded_data/01-keycloak > postgres/preloaded_data/01-keycloak.sql
+    
+    #### PgAdmin / Keycloak need their client key to be set to be created
+    ####    successfully.
+    touch keycloak/clients/pgadmin.json
+    envsubst < keycloak/clients/pgadmin > keycloak/clients/pgadmin.json
+    touch pgadmin/pgadmin.json
+    envsubst < pgadmin/config_local > pgadmin/config_local.py
+
 
     docker build ./postgres/ -t localhost:$registry_port/data-lake-postgres
     docker build ./keycloak/ -t localhost:$registry_port/data-lake-keycloak
     docker build ./pgadmin/ -t localhost:$registry_port/data-lake-pgadmin
     
+    ## Clean-up our scripts with secrets
     rm postgres/preloaded_data/01-keycloak.sql
+    rm keycloak/clients/pgadmin.json   # Key-cloak Auth configured json
+    rm pgadmin/config_local.py         # Key-cloak Auth configured py
 
 
     ### Push the docker-image to the local registry
