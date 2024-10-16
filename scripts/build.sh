@@ -19,7 +19,7 @@ function add_jupyter_k8s_pod {
     fi
 
     printf "\n=============================================================================\nExecuting the $path, to create the service $name\n"
-    envsubst < $path | kubectl apply -f -
+    envsubst < $path | $kubectl apply -f -
 }
 
 ## =================================================================================================================================================================================
@@ -68,27 +68,27 @@ function buildDockerImages {
 function buildKubernetes {
     ## Create data-lake
     ### Setup the namespace, configmap, and secrets
-    envsubst < data-lake.yaml | kubectl apply -f -
+    envsubst < data-lake.yaml | $kubectl apply -f -
 
     ### Setup the postgresql pods
     printf "\n=============================================================================\nSetup Postgres Pod\n"
     #kubectl apply -f postgres/postgres.yaml
-    envsubst < postgres/postgres.yaml | kubectl apply -f -
+    envsubst < postgres/postgres.yaml | $kubectl apply -f -
 
     ### Setup the pgadmin pod / service
     printf "\n=============================================================================\nSetup PgAdmin Pod\n"
     #kubectl apply -f pgadmin/pgadmin.yaml
-    envsubst < pgadmin/pgadmin.yaml | kubectl apply -f -
+    envsubst < pgadmin/pgadmin.yaml | $kubectl apply -f -
 
     sleep 5s
 
     ### Setup the Keycloak pod / service
     printf "\n=============================================================================\nSetup Keycloak Pod\n"
-    envsubst < keycloak/keycloak.yaml | kubectl apply -f -
+    envsubst < keycloak/keycloak.yaml | $kubectl apply -f -
 
     ### ============== Show all of our relavent pods / services ==============
     printf "\n=============================================================================\nResults\n"
-    kubectl get all -o wide -n stone-data-lake
+    $kubectl get all -o wide -n stone-data-lake
 
 
     ## =============== JUPYTERHUB BLOCK ===============

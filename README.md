@@ -46,3 +46,21 @@ A simplified example of the data-lake using Kubernetes
 
 ## Install Kubernetes on linux
 ##### - https://linuxconfig.org/how-to-install-kubernetes-on-linux-mint
+## Install docker/curl
+$ sudo apt update
+$ sudo apt install curl docker.io
+## Start/enable docker
+$ sudo systemctl start docker
+$ sudo systemctl enable docker
+## Disable swap space
+$ sudo swapoff -a
+$ sudo sed -i '/ swap / s/^/#/' /etc/fstab
+## Download minikube installer
+$ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+## Install the package
+$ sudo dpkg -i minikube_latest_amd64.deb
+## Setup minikube
+$ minikube start
+$ minikube start --driver=docker
+$ minikube kubectl -- get po -A
+$ alias kubectl="minikube kubectl --"

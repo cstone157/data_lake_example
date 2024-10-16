@@ -29,7 +29,7 @@ function cleanupCommand {
 #        kubectl delete namespace stone-data-lake & kubectl delete pvc --all & kubectl delete pv --all & kubectl delete secrets --all & kubectl delete configmap --all
 
         printf "== Start Cleaning up our Kubernetes data-lake enviroment\n"
-        kubectl delete namespace stone-data-lake && kubectl delete pvc --all && kubectl delete pv --all && kubectl delete secrets --all && kubectl delete configmap --all
+        $kubectl delete namespace stone-data-lake && $kubectl delete pvc --all && $kubectl delete pv --all && $kubectl delete secrets --all && $kubectl delete configmap --all
     fi
 
     ## If any of our parameters are docker, then go ahead and cleanup our docker enviroment

@@ -12,6 +12,20 @@ then
     exit 1
 fi
 
+if ! command -v kubectl &> /dev/null
+then
+    if ! command -v minikube &> /dev/null
+    then
+        printf "kubectl and minikube not found, please fix"
+        exit 1
+    else
+        #kubectl="minikube kubectl --"
+        kubectl="minikube kubectl --"
+    fi
+else
+    kubectl="kubectl"
+fi
+
 _command="$1"
 ## ========== EXECUTE THE CLEANUP COMMAND BLOCK ===========
 if [ "$_command" == "cleanup" ]; then
