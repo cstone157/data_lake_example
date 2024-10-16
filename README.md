@@ -43,3 +43,6 @@ A simplified example of the data-lake using Kubernetes
 
 ##### - https://www.olavgg.com/show/how-to-configure-pgadmin-4-with-oauth2-and-keycloak
 ##### - https://www.pgadmin.org/docs/pgadmin4/latest/config_py.html
+
+## Install Kubernetes on linux
+##### - https://linuxconfig.org/how-to-install-kubernetes-on-linux-mint
