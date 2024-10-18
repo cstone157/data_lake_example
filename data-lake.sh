@@ -5,6 +5,7 @@ source ./scripts/utils.sh
 source ./scripts/variables.sh
 
 
+
 # Check if the commands we need to run are installed
 if ! command -v envsubst &> /dev/null
 then
@@ -31,32 +32,26 @@ _command="$1"
 if [ "$_command" == "cleanup" ]; then
     source ./scripts/cleanup.sh
     cleanupCommand $2
-fi
-
 ## ============== EXECUTE BUILD COMMAND BLOCK =============
-if [ "$_command" == "build" ]; then
+elif [ "$_command" == "build" ]; then
     source ./scripts/build.sh
     buildCommand $2
-fi
-
 ## ============= EXECUTE STATUS COMMAND BLOCK =============
-if [ "$_command" == "status" ]; then
+elif [ "$_command" == "status" ]; then
     kubectl get all -n stone-data-lake
     kubectl get persistentvolume -n stone-data-lake
     kubectl get persistentvolumeclaim -n stone-data-lake
-fi
-
-
-
 
 ## ================ OPEN PODS COMMAND LINE ================
-if [ "$_command" == "exec" ]; then
+elif [ "$_command" == "exec" ]; then
     kubectl exec -it -n stone-data-lake pod/keycloak-d67848c6-xkvm9 -- sh
-fi
 
 ## ============= TEMP REGISTRY COMMAND BLOCK =============
-if [ "$_command" == "registry" ]; then
+elif [ "$_command" == "registry" ]; then
     source ./scripts/build.sh
     buildRegistry
-fi
 
+## ===================== ELSE BLOCK ======================
+else
+    printf "Error unrecorgnized command, the commands supported are ???? (fill me in later)\n"
+fi
