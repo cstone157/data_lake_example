@@ -13,6 +13,7 @@ then
     exit 1
 fi
 
+# Check if we have kubectl or minikube enabled
 if ! command -v kubectl &> /dev/null
 then
     if ! command -v minikube &> /dev/null

@@ -4,7 +4,7 @@
     "enabled": true,
     "alwaysDisplayInConsole": false,
     "clientAuthenticatorType": "client-secret",
-    "secret": "Kkr2mngidME0hXItaSTiAe9s",
+    "secret": "${CLIENT_SECRET}",
     "redirectUris": [
         "https://localhost:30200/oauth2/authorize"
     ],
