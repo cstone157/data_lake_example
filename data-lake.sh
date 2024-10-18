@@ -5,6 +5,7 @@ source ./scripts/utils.sh
 source ./scripts/variables.sh
 
 
+
 # Check if the commands we need to run are installed
 if ! command -v envsubst &> /dev/null
 then
