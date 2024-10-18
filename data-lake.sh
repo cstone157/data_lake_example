@@ -20,7 +20,6 @@ then
         printf "kubectl and minikube not found, please fix"
         exit 1
     else
-        #kubectl="minikube kubectl --"
         kubectl="minikube kubectl --"
     fi
 else
@@ -32,32 +31,21 @@ _command="$1"
 if [ "$_command" == "cleanup" ]; then
     source ./scripts/cleanup.sh
     cleanupCommand $2
-fi
-
 ## ============== EXECUTE BUILD COMMAND BLOCK =============
-if [ "$_command" == "build" ]; then
+elif [ "$_command" == "build" ]; then
     source ./scripts/build.sh
     buildCommand $2
-fi
-
 ## ============= EXECUTE STATUS COMMAND BLOCK =============
-if [ "$_command" == "status" ]; then
-    kubectl get all -n stone-data-lake
-    kubectl get persistentvolume -n stone-data-lake
-    kubectl get persistentvolumeclaim -n stone-data-lake
-fi
-
-
-
-
+elif [ "$_command" == "status" ]; then
+    get_status
 ## ================ OPEN PODS COMMAND LINE ================
-if [ "$_command" == "exec" ]; then
-    kubectl exec -it -n stone-data-lake pod/keycloak-d67848c6-xkvm9 -- sh
-fi
-
+elif [ "$_command" == "exec" ]; then
+    $kubectl exec -it -n stone-data-lake pod/keycloak-d67848c6-xkvm9 -- sh
 ## ============= TEMP REGISTRY COMMAND BLOCK =============
-if [ "$_command" == "registry" ]; then
+elif [ "$_command" == "registry" ]; then
     source ./scripts/build.sh
     buildRegistry
-fi
 
+else
+    printf "Unknown command\n\tOnly recognized commands:\n\t\tcleanup - \n\t\tbuild - \n\t\tstatus - \n\t\texec - Don't use exec, it won't work\n\t\tregistry - \n"
+fi

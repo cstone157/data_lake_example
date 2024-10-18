@@ -13,3 +13,17 @@ function pause_script {
         printf "\n"
     fi
 }
+
+## Print / display the status of the current kubectl status
+function get_status {
+    $kubectl get all -n stone-data-lake
+    printf "\n"
+    $kubectl get persistentvolume -n stone-data-lake
+    printf "\n"
+    $kubectl get persistentvolumeclaim -n stone-data-lake
+}
+
+## Print horizontal rule (composed of '=')
+function horizontal_seperator {
+    printf "\n=============================================================================\n$1\n"
+}

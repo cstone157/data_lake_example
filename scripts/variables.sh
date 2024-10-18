@@ -15,6 +15,10 @@ function build_variables {
     export keycloak_db_password_b64=$(echo -ne $keycloak_db_password | base64)
     export keycloak_db_b64=$(echo -ne $keycloak_db | base64)
 
+    ## Create a enviroment variable for what we will be calling our keyclaok realm
+    keycloak_realm="data_lake"
+    export keycloak_realm="$keycloak_realm"
+
     #### Create our password/username for our secrests
     default_username="admin"
     default_password="admin"
@@ -26,6 +30,7 @@ function build_variables {
 #    export postgres_local_path="//run/desktop/mnt/host/c/Users/c.stone/Documents/GitHub/data_lake_example/postgres/data"
     export postgres_local_path="//run/desktop/mnt/host/c/Users/c.stone/Desktop/805_projects/data_lake_example/postgres/data"
 #    export postgres_local_path="data_lake_example\postgres\data"
+    export jupyter_local_path="//run/desktop/mnt/host/c/Users/c.stone/Desktop/805_projects/data_lake_example/jupyter/work"
 
     export pgadmin_root_username_b64=$(echo -ne $default_email | base64)
     export pgadmin_root_password_b64=$(echo -ne $default_password | base64)

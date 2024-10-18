@@ -60,6 +60,7 @@ function buildDockerImages {
     docker build ./postgres/ -t localhost:$registry_port/data-lake-postgres
     docker build ./keycloak/ -t localhost:$registry_port/data-lake-keycloak
     docker build ./pgadmin/ -t localhost:$registry_port/data-lake-pgadmin
+    docker build ./jupyter/ -t localhost:$registry_port/data-lake-jupyter
     
     ## Clean-up our scripts with secrets
     rm postgres/preloaded_data/01-keycloak.sql
@@ -72,6 +73,7 @@ function buildDockerImages {
     docker push localhost:$registry_port/data-lake-postgres
     docker push localhost:$registry_port/data-lake-keycloak
     docker push localhost:$registry_port/data-lake-pgadmin
+    docker push localhost:$registry_port/data-lake-jupyter
 }
 
 ## =================================================================================================================================================================================
@@ -83,44 +85,28 @@ function buildKubernetes {
     envsubst < data-lake.yaml | $kubectl apply -f -
 
     ### Setup the postgresql pods
-    printf "\n=============================================================================\nSetup Postgres Pod\n"
-    #kubectl apply -f postgres/postgres.yaml
+    horizontal_seperator "Setup Postgres Pod"
     envsubst < postgres/postgres.yaml | $kubectl apply -f -
 
     ### Setup the pgadmin pod / service
-    printf "\n=============================================================================\nSetup PgAdmin Pod\n"
-    #kubectl apply -f pgadmin/pgadmin.yaml
+    horizontal_seperator "Setup PgAdmin Pod"
     envsubst < pgadmin/pgadmin.yaml | $kubectl apply -f -
 
+    ### Delay 5 seconds to let postgres have some time to setup before Keycloak starts
     sleep 5s
-
     ### Setup the Keycloak pod / service
-    printf "\n=============================================================================\nSetup Keycloak Pod\n"
+    horizontal_seperator "Setup Keycloak Pod"
     envsubst < keycloak/keycloak.yaml | $kubectl apply -f -
 
+
+    ### Setup the Keycloak pod / service
+    horizontal_seperator "Setup Jupyter Pod"
+    envsubst < jupyter/jupyter-w-local.yaml | $kubectl apply -f -
+
+
     ### ============== Show all of our relavent pods / services ==============
-    printf "\n=============================================================================\nResults\n"
-    $kubectl get all -o wide -n stone-data-lake
-
-
-    ## =============== JUPYTERHUB BLOCK ===============
-#        printf "=============================================================================\nSetup JupyterHub Pod\n"
-#        add_jupyter_k8s_pod
-
-#        add_k8s_pod "jupyter" "jupyter/jupyter.yaml" -1 -1
-    ## Get all the nodes
-#        kubectl get node
-    ## label the node with local-storage
-#        kubectl label nodes <node-name> local-storage-available=true
-    ## Create the persistent volumes for the local hard-drive
-#        kubectl apply -f jupyter/jupyter-volume.yaml
-
-
-    ## TLS Certificate and key
-    ## The openssl doesn't work in "git bash", need to run it in regular bash or powershell
-#        openssl req -subj '/CN=test.keycloak.org/O=Test Keycloak./C=US' -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
-#        kubectl create secret tls example-tls-secret --cert certificate.pem --key key.pem
-
+    horizontal_seperator "Results"
+    get_status
 }
 
 
